@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.25)
+project(libpcrecomp LANGUAGES C CXX)
+add_library(pcrecomp_bridge STATIC src/runtime.cpp)
+add_library(pcrecomp::bridge ALIAS pcrecomp_bridge)
+target_include_directories(pcrecomp_bridge PUBLIC include)
+target_compile_features(pcrecomp_bridge PUBLIC cxx_std_17)

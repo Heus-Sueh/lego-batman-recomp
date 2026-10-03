@@ -1,0 +1,3248 @@
+# LEGO Batman: The Videogame - Discovered Functions
+# Revision: lego_batman (v1.0 GOG Clean)
+
+# -----------------------------------------------------------------------------
+# CRT & Process Entry Path
+# -----------------------------------------------------------------------------
+
+[[function]]
+rva = 0x0073D482
+name = "crt_pe_managed_image_check"
+convention = "cdecl"
+stack_purge = 0
+size = 65
+confidence = "PARTIALLY_VERIFIED"
+lift = true
+evidence = ["VERIFIED: 65-byte leaf checks DOS/PE32 headers and CLR directory; ret at 0x0073D4BF and 0x0073D4C2", "VERIFIED: caller 0x0073D588 passes no stack arguments and stores EAX at 0x0073D58D", "PARTIALLY_VERIFIED: cdecl label for zero-argument function; no second independent call site established"]
+
+[[function]]
+rva = 0x0074797F
+name = "_heap_init"
+convention = "cdecl"
+stack_purge = 0
+size = 90
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 90-byte function; returns at 0x007479A1 and 0x007479D8 (plain ret)", "VERIFIED: caller 0x0073D594 pushes 1 stack argument and cleans up with pop ecx at 0x0073D599", "VERIFIED: accesses [esp+4] as argument, calls HeapCreate (0x02A16A44), sub_00747924, sub_0074E462, HeapDestroy (0x02A16A40)"]
+callees = [0x00747924, 0x0074E462]
+
+[[function]]
+rva = 0x00747924
+name = "_heap_select"
+convention = "cdecl"
+stack_purge = 0
+size = 91
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 91-byte function; returns at 0x00747978 and 0x0074797D (leave; ret)", "VERIFIED: caller 0x007479A2 passes no stack arguments and stores EAX", "VERIFIED: checks _osplatform (via 0x73E927) and _winmajor (via 0x73E9D6); returns 1 if NT >= 5, else 3"]
+callees = [0x0073E927, 0x0073E9D6]
+
+[[function]]
+rva = 0x0073E927
+name = "_get_osplatform"
+convention = "cdecl"
+stack_purge = 0
+size = 55
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 55-byte function; returns at 0x0073E94E and 0x0073E95D (ret)", "VERIFIED: takes 1 stack argument [esp+4], writes dword ptr [0x2a10ac8] (_osplatform) to it and returns 0"]
+
+[[function]]
+rva = 0x0073E9D6
+name = "_get_winmajor"
+convention = "cdecl"
+stack_purge = 0
+size = 60
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 60-byte function; returns at 0x0073E9FD and 0x0073EA11 (ret)", "VERIFIED: takes 1 stack argument [esp+4], writes dword ptr [0x2a10ad4] (_winmajor) to it and returns 0"]
+
+[[function]]
+rva = 0x00745056
+name = "_mtinit"
+convention = "cdecl"
+stack_purge = 0
+size = 388
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 388-byte function; returns at 0x007451D9 (pop esi; pop edi; ret)", "VERIFIED: caller 0x0073D5A6 passes 0 stack arguments, tests EAX return value and branches on success", "VERIFIED: initializes CRT multithreading, TLS/FLS, and calls GetModuleHandleA, GetProcAddress, TlsAlloc, TlsSetValue, GetCurrentThreadId"]
+callees = [0x0073EC70, 0x00744BE1, 0x00744C58, 0x00744D35, 0x00744D72, 0x0074524B, 0x0074C0E7]
+
+[[function]]
+rva = 0x0073EC70
+name = "_initptd"
+convention = "cdecl"
+stack_purge = 0
+size = 76
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 76-byte function; returns at 0x0073ECBB (ret)", "VERIFIED: caller 0x0074511A passes 0 arguments", "VERIFIED: initializes per-thread data fields and function pointers"]
+callees = [0x00744C4F, 0x0074A883, 0x0074C65D, 0x007434C6, 0x0074C653, 0x0074C3EB, 0x00740563, 0x00746FDC, 0x007469B2, 0x00744BE1]
+
+[[function]]
+rva = 0x00744C4F
+name = "_getptd_noexit"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte function; pushes 0, calls _encode_pointer, returns at 0x00744C57"]
+callees = [0x00744BE1]
+
+[[function]]
+rva = 0x00744BE1
+name = "_encode_pointer"
+convention = "cdecl"
+stack_purge = 0
+size = 110
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 110-byte function; returns at 0x00744C4E (ret)", "VERIFIED: caller passes 1 stack argument; encodes pointer using KERNEL32!EncodePointer or returns as-is"]
+callees = [0x00744B75]
+
+[[function]]
+rva = 0x00744C58
+name = "_decode_pointer"
+convention = "cdecl"
+stack_purge = 0
+size = 110
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 110-byte function; returns at 0x00744CC5 (ret)", "VERIFIED: caller passes 1 stack argument; decodes pointer using KERNEL32!DecodePointer or returns as-is"]
+callees = [0x00744B75]
+
+[[function]]
+rva = 0x00744B75
+name = "_check_encode_pointer_supported"
+convention = "cdecl"
+stack_purge = 0
+size = 108
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 108-byte function; returns at 0x00744BE0 (leave; ret)", "VERIFIED: checks OS version (via _get_winmajor 0x73E9D6) and PE header"]
+callees = [0x0073E9D6, 0x00746D10]
+
+[[function]]
+rva = 0x00746D10
+name = "strcmp"
+convention = "cdecl"
+stack_purge = 0
+size = 136
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 136-byte optimized assembly strcmp; returns at 0x00746D52 and 0x00746D5B", "VERIFIED: caller 0x00744BBC pushes 2 arguments and pops 2 with pop ecx; pop ecx at 0x00744BC3"]
+
+[[function]]
+rva = 0x0074A883
+name = "_set_errno_ptr"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte leaf setter; writes [esp+4] to 0x02A112A0 and returns"]
+
+[[function]]
+rva = 0x0074C65D
+name = "_set_doserrno_ptr"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte leaf setter; writes [esp+4] to 0x02A11410 and returns"]
+
+[[function]]
+rva = 0x007434C6
+name = "_set_oserr_ptr"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte leaf setter; writes [esp+4] to 0x02A10B28 and returns"]
+
+[[function]]
+rva = 0x0074C653
+name = "_set_commode_ptr"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte leaf setter; writes [esp+4] to 0x02A1140C and returns"]
+
+[[function]]
+rva = 0x0074C3EB
+name = "_set_fmode_ptr"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte leaf setter; writes [esp+4] to 0x02A11400 and returns"]
+
+[[function]]
+rva = 0x00740563
+name = "_set_signal_ptrs"
+convention = "cdecl"
+stack_purge = 0
+size = 25
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 25-byte leaf setter; writes [esp+4] to signal handler pointers 0x02A10B0C..0x02A10B18"]
+
+[[function]]
+rva = 0x00746FDC
+name = "_init_tls_dummy"
+convention = "cdecl"
+stack_purge = 0
+size = 1
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 1-byte leaf; ret"]
+
+[[function]]
+rva = 0x007469B2
+name = "_set_exit_code_ptr"
+convention = "cdecl"
+stack_purge = 0
+size = 17
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 17-byte function; encodes 0x74692F and stores in 0x02A10E6C, returns"]
+callees = [0x00744BE1]
+
+[[function]]
+rva = 0x0074C0E7
+name = "_mtinitlocks"
+convention = "cdecl"
+stack_purge = 0
+size = 73
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 73-byte function; returns at 0x0074C123 and 0x0074C121 (ret)", "VERIFIED: initializes 36 CRT critical section locks and calls _InitializeCriticalSectionEx (0x74C677)"]
+callees = [0x0074C677]
+
+[[function]]
+rva = 0x0074C677
+name = "_InitializeCriticalSectionEx"
+convention = "cdecl"
+stack_purge = 0
+size = 197
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 197-byte function with SEH frame; returns at 0x0074C73B (ret)", "VERIFIED: queries InitializeCriticalSectionAndSpinCount from kernel32 or falls back to _init_critsec_wrapper (0x74C667)"]
+callees = [0x0074C667, 0x00744C58, 0x0073E927, 0x00744BE1]
+
+[[function]]
+rva = 0x0074C667
+name = "_init_critsec_wrapper"
+convention = "stdcall"
+stack_purge = 8
+size = 16
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 16-byte stdcall fallback wrapper; calls InitializeCriticalSection, returns 1 with ret 8 at 0x0074C674"]
+
+[[function]]
+rva = 0x00744CC6
+name = "_tls_alloc_wrapper"
+convention = "stdcall"
+stack_purge = 4
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte stdcall wrapper; calls TlsAlloc, returns with ret 4 at 0x00744CCC"]
+
+[[function]]
+rva = 0x0073D6A3
+name = "mainCRTStartup"
+convention = "stdcall"
+stack_purge = 0
+confidence = "high"
+lift = true
+evidence = ["PE Entry Point (RVA 0x0033D6A3, VA 0x0073D6A3)", "Initializes security cookie and jumps to __tmainCRTStartup"]
+callees = [0x00747A53, 0x0073D4C3]
+
+[[function]]
+rva = 0x00747A53
+name = "__security_init_cookie"
+convention = "cdecl"
+stack_purge = 0
+confidence = "high"
+lift = true
+evidence = ["MSVC 8.00 CRT security cookie initialization"]
+
+[[function]]
+rva = 0x0073D4C3
+name = "__tmainCRTStartup"
+convention = "cdecl"
+stack_purge = 0
+confidence = "high"
+lift = true
+evidence = ["MSVC 8.00 WinMain CRT startup harness", "Initializes runtime tables, arguments, and invokes WinMain at 0x00527F60"]
+callees = [0x00527F60]
+
+# -----------------------------------------------------------------------------
+# WinMain & Engine Entry
+# -----------------------------------------------------------------------------
+
+[[function]]
+rva = 0x00527F60
+name = "WinMain"
+convention = "stdcall"
+stack_purge = 16
+confidence = "high"
+lift = true
+evidence = ["Authentic WinMain of LEGO Batman: The Videogame (hInstance, hPrevInstance, lpCmdLine, nCmdShow)"]
+
+[[function]]
+rva = 0x007453F0
+name = "_EH_prolog3"
+convention = "cdecl"
+stack_purge = 0
+confidence = "high"
+lift = true
+evidence = ["MSVC 8.00 CRT Structured Exception Handling prologue (sets up EBP and frame)"]
+
+[[function]]
+rva = 0x00745435
+name = "_EH_epilog3"
+convention = "cdecl"
+stack_purge = 0
+confidence = "high"
+lift = true
+evidence = ["MSVC 8.00 CRT Structured Exception Handling epilogue"]
+
+# -----------------------------------------------------------------------------
+# WinMain Early Subsystems & Main Loop
+# -----------------------------------------------------------------------------
+
+[[function]]
+rva = 0x005263B0
+name = "sub_005263B0"
+convention = "cdecl"
+stack_purge = 0
+size = 230
+confidence = "high"
+lift = true
+evidence = ["Early screen / system parameters query"]
+
+[[function]]
+rva = 0x005318A0
+name = "sub_005318A0"
+convention = "cdecl"
+stack_purge = 0
+size = 873
+confidence = "high"
+lift = true
+evidence = ["CPU feature detection (CPUID, MMX, SSE, SSE2)"]
+
+[[function]]
+rva = 0x006D6810
+name = "sub_006D6810"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "high"
+lift = true
+evidence = ["Global state setter (tailcall to 0x006E3C60)"]
+callees = [0x006E3C60]
+
+[[function]]
+rva = 0x006E3C60
+name = "sub_006E3C60"
+convention = "cdecl"
+stack_purge = 0
+size = 1
+confidence = "high"
+lift = true
+evidence = ["Empty helper (ret)"]
+
+[[function]]
+rva = 0x00526B20
+name = "sub_00526B20"
+convention = "cdecl"
+stack_purge = 0
+size = 757
+confidence = "high"
+lift = true
+evidence = ["Command line argument parser (populates argc and argv)"]
+callees = [0x00526AD0]
+
+[[function]]
+rva = 0x00526AD0
+name = "sub_00526AD0"
+convention = "cdecl"
+stack_purge = 0
+size = 67
+confidence = "high"
+lift = true
+evidence = ["Command line string tokenizer helper"]
+
+[[function]]
+rva = 0x00526EA0
+name = "sub_00526EA0"
+convention = "cdecl"
+stack_purge = 0
+size = 321
+confidence = "high"
+lift = true
+evidence = ["Windows Game Explorer / COM subsystem initialization; returns al = 1"]
+callees = [0x006D6800, 0x0073CB50, 0x0073CA0B]
+
+[[function]]
+rva = 0x006D6800
+name = "sub_006D6800"
+convention = "cdecl"
+stack_purge = 0
+size = 6
+confidence = "high"
+lift = true
+evidence = ["Global state getter at 0xADE648"]
+
+[[function]]
+rva = 0x0073CB50
+name = "memset"
+convention = "cdecl"
+stack_purge = 0
+size = 122
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 122-byte function; returns at 0x0073CBC4 and 0x0073CBC9 (ret)", "VERIFIED: MSVC CRT memset implementation"]
+callees = [0x007454A0]
+
+[[function]]
+rva = 0x0073CA0B
+name = "__security_check_cookie"
+convention = "cdecl"
+stack_purge = 0
+size = 15
+confidence = "high"
+lift = true
+evidence = ["MSVC CRT security cookie validator"]
+
+[[function]]
+rva = 0x00401668
+name = "sub_00401668"
+convention = "cdecl"
+stack_purge = 0
+size = 5
+confidence = "high"
+lift = true
+evidence = ["Thunk to main engine entry point sub_004B01D0"]
+
+[[function]]
+rva = 0x00527EE0
+name = "sub_00527EE0"
+convention = "cdecl"
+stack_purge = 0
+size = 122
+confidence = "high"
+lift = true
+evidence = ["Engine shutdown routine invoked at exit of WinMain"]
+
+
+[[function]]
+rva = 0x004B01D0
+name = "sub_004B01D0"
+convention = "cdecl"
+stack_purge = 0
+size = 4705
+confidence = "high"
+lift = true
+evidence = ["Main TT Games Engine initialization and execution loop (argc, argv)"]
+
+
+# -----------------------------------------------------------------------------
+# Main Loop - Early Subsystems & Audio Updates
+# -----------------------------------------------------------------------------
+
+[[function]]
+rva = 0x00642490
+name = "sub_00642490"
+convention = "cdecl"
+stack_purge = 0
+size = 80
+confidence = "high"
+lift = true
+evidence = ["Audio / sound engine frame update routine"]
+
+[[function]]
+rva = 0x005818B0
+name = "sub_005818B0"
+convention = "cdecl"
+stack_purge = 0
+size = 84
+confidence = "high"
+lift = true
+evidence = ["Audio channel / voice state updater"]
+
+[[function]]
+rva = 0x0055E540
+name = "sub_0055E540"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "high"
+lift = true
+evidence = ["Audio hardware timer sync"]
+
+[[function]]
+rva = 0x005614E0
+name = "sub_005614E0"
+convention = "cdecl"
+stack_purge = 0
+size = 48
+confidence = "high"
+lift = true
+evidence = ["Audio bus volume transition helper"]
+
+[[function]]
+rva = 0x00580310
+name = "sub_00580310"
+convention = "cdecl"
+stack_purge = 0
+size = 486
+confidence = "high"
+lift = true
+evidence = ["Audio stream status updater"]
+
+[[function]]
+rva = 0x005F7B00
+name = "sub_005F7B00"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "high"
+lift = true
+evidence = ["Engine subsystem tick synchronization"]
+
+[[function]]
+rva = 0x005360C0
+name = "sub_005360C0"
+convention = "cdecl"
+stack_purge = 0
+size = 86
+confidence = "high"
+lift = true
+evidence = ["Input device poll and event buffer flush"]
+
+[[function]]
+rva = 0x005BDC00
+name = "sub_005BDC00"
+convention = "cdecl"
+stack_purge = 0
+size = 13
+confidence = "high"
+lift = true
+evidence = ["Timing counter delta update"]
+
+[[function]]
+rva = 0x0070A490
+name = "sub_0070A490"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "high"
+lift = true
+evidence = ["Memory allocator cache trimmer"]
+
+
+# -----------------------------------------------------------------------------
+# Main Loop - Message Pump & Frame Processing
+# -----------------------------------------------------------------------------
+
+[[function]]
+rva = 0x00527130
+name = "sub_00527130"
+convention = "cdecl"
+stack_purge = 0
+size = 115
+confidence = "high"
+lift = true
+evidence = ["Win32 PeekMessageA / DispatchMessageA pump, returns 1 to continue loop"]
+callees = [0x005290A0, 0x005290B0]
+
+[[function]]
+rva = 0x005290A0
+name = "sub_005290A0"
+convention = "cdecl"
+stack_purge = 0
+size = 13
+confidence = "high"
+lift = true
+evidence = ["EnterCriticalSection wrapper for message pump"]
+callees = [0x006E3980]
+
+[[function]]
+rva = 0x005290B0
+name = "sub_005290B0"
+convention = "cdecl"
+stack_purge = 0
+size = 13
+confidence = "high"
+lift = true
+evidence = ["LeaveCriticalSection wrapper for message pump"]
+callees = [0x006E39A0]
+
+[[function]]
+rva = 0x006E3980
+name = "sub_006E3980"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "high"
+lift = true
+evidence = ["Critical section array lock dispatcher"]
+
+[[function]]
+rva = 0x006E39A0
+name = "sub_006E39A0"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "high"
+lift = true
+evidence = ["Critical section array unlock dispatcher"]
+
+[[function]]
+rva = 0x00526180
+name = "sub_00526180"
+convention = "cdecl"
+stack_purge = 0
+size = 1
+confidence = "high"
+lift = true
+evidence = ["Frame preamble hook (ret)"]
+
+[[function]]
+rva = 0x006D65A0
+name = "sub_006D65A0"
+convention = "cdecl"
+stack_purge = 0
+size = 6
+confidence = "high"
+lift = true
+evidence = ["Render status flag getter at 0xADE654"]
+
+[[function]]
+rva = 0x00717780
+name = "sub_00717780"
+convention = "cdecl"
+stack_purge = 0
+size = 131
+confidence = "high"
+lift = true
+evidence = ["Graphics context state binder"]
+
+[[function]]
+rva = 0x00717810
+name = "sub_00717810"
+convention = "cdecl"
+stack_purge = 0
+size = 54
+confidence = "high"
+lift = true
+evidence = ["Graphics context viewport synchronizer"]
+
+[[function]]
+rva = 0x0055F170
+name = "sub_0055F170"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "high"
+lift = true
+evidence = ["Delta-time accumulator"]
+
+[[function]]
+rva = 0x0060CEB0
+name = "sub_0060CEB0"
+convention = "cdecl"
+stack_purge = 0
+size = 48
+confidence = "high"
+lift = true
+evidence = ["Render state mode selector"]
+
+[[function]]
+rva = 0x0061B3E0
+name = "sub_0061B3E0"
+convention = "cdecl"
+stack_purge = 0
+size = 78
+confidence = "high"
+lift = true
+evidence = ["Scene visibility query"]
+
+[[function]]
+rva = 0x005BDFC0
+name = "sub_005BDFC0"
+convention = "cdecl"
+stack_purge = 0
+size = 192
+confidence = "high"
+lift = true
+evidence = ["Frame timing interpolator"]
+
+[[function]]
+rva = 0x005A0E00
+name = "sub_005A0E00"
+convention = "cdecl"
+stack_purge = 0
+size = 1
+confidence = "high"
+lift = true
+evidence = ["Frame presentation callback"]
+
+[[function]]
+rva = 0x006D52C0
+name = "sub_006D52C0"
+convention = "cdecl"
+stack_purge = 0
+size = 320
+confidence = "high"
+lift = true
+evidence = ["Scene camera transform matrix update"]
+
+[[function]]
+rva = 0x005A5310
+name = "sub_005A5310"
+convention = "cdecl"
+stack_purge = 0
+size = 318
+confidence = "high"
+lift = true
+evidence = ["Post-frame presentation sync"]
+
+
+[[function]]
+rva = 0x005BDCF0
+name = "sub_005BDCF0"
+convention = "cdecl"
+stack_purge = 0
+size = 175
+confidence = "high"
+lift = true
+evidence = ["Authentic game running / exit condition check at 0xAD21BC"]
+
+
+[[function]]
+rva = 0x00526FF0
+name = "sub_00526FF0"
+convention = "cdecl"
+stack_purge = 0
+size = 139
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 139-byte single instance mutex check; returns at 0x0052704F and 0x0052707A (ret)"]
+
+[[function]]
+rva = 0x00528040
+name = "sub_00528040"
+convention = "stdcall"
+stack_purge = 16
+size = 735
+confidence = "high"
+lift = true
+evidence = ["Authentic TT Games Win32 WndProc for TTalesWindow (WM_CLOSE, WM_DESTROY, WM_SIZE, WM_ACTIVATE)"]
+
+[[function]]
+rva = 0x00528440
+name = "sub_00528440"
+convention = "cdecl"
+stack_purge = 0
+size = 498
+confidence = "high"
+lift = true
+evidence = ["Authentic TT Games Window creation and class registration (TTalesWindow)"]
+
+# -----------------------------------------------------------------------------
+# MSVC CRT Multithreading, Heap Allocator & Initialization Frontier
+# -----------------------------------------------------------------------------
+
+[[function]]
+rva = 0x0074524B
+name = "_calloc_crt"
+convention = "cdecl"
+stack_purge = 0
+size = 72
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 72-byte function; returns at 0x00745292 (pop edi; pop esi; ret)", "VERIFIED: calls calloc (0x74186C) and Sleep (0x2A1690C) on retry loop"]
+callees = [0x0074186C]
+
+[[function]]
+rva = 0x0074186C
+name = "calloc"
+convention = "cdecl"
+stack_purge = 0
+size = 286
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 286-byte function with SEH frame; returns at 0x00741989 (ret)", "VERIFIED: checks overflow, calls HeapAlloc via 0x2A169D0, memset (0x73CB50), _lock (0x74C275), _unlock (0x74C185)"]
+callees = [0x007453F0, 0x0073CB50, 0x0074C275, 0x0074C185, 0x00745435]
+
+[[function]]
+rva = 0x00744D72
+name = "_initptd_locks"
+convention = "cdecl"
+stack_purge = 0
+size = 182
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 182-byte function with SEH frame; returns at 0x00744E27 (ret)", "VERIFIED: initializes thread data lock pointers, calls _lock (0x74C275), _initptd_sub (0x75023D), _unlock_locale_sub (0x744E28)"]
+callees = [0x007453F0, 0x00744B75, 0x0074C275, 0x0075023D, 0x00744E28, 0x00745435]
+
+[[function]]
+rva = 0x00744E28
+name = "_unlock_locale_sub"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte function; pushes 0xC, calls _unlock (0x74C185), returns at 0x00744E30"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x0075023D
+name = "_initptd_sub"
+convention = "cdecl"
+stack_purge = 0
+size = 134
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 134-byte function; returns at 0x007502C2 (ret)", "VERIFIED: increments reference counts using InterlockedIncrement (0x2A16A10)"]
+
+[[function]]
+rva = 0x0074C275
+name = "_lock"
+convention = "cdecl"
+stack_purge = 0
+size = 49
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 49-byte function; returns at 0x0074C2A5 (ret)", "VERIFIED: enters critical section via EnterCriticalSection (0x2A16938) or calls _mtinitlocknum (0x74C1B2)"]
+callees = [0x0074C1B2, 0x0073E87E]
+
+[[function]]
+rva = 0x0074C185
+name = "_unlock"
+convention = "cdecl"
+stack_purge = 0
+size = 21
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 21-byte function; returns at 0x0074C199 (ret)", "VERIFIED: leaves critical section via LeaveCriticalSection (0x2A16934)"]
+
+[[function]]
+rva = 0x00744D35
+name = "_mtterm_error"
+convention = "cdecl"
+stack_purge = 0
+size = 61
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 61-byte cleanup handler; frees TLS and jumps to _mtterm (0x74C130)"]
+callees = [0x00744C58, 0x0074C130]
+
+[[function]]
+rva = 0x0074C130
+name = "_mtterm"
+convention = "cdecl"
+stack_purge = 0
+size = 85
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 85-byte function; returns at 0x0074C184 (ret)", "VERIFIED: deletes critical sections via DeleteCriticalSection (0x2A16958) and frees memory"]
+callees = [0x00740F1B]
+
+[[function]]
+rva = 0x0074C1B2
+name = "_mtinitlocknum"
+convention = "cdecl"
+stack_purge = 0
+size = 186
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 186-byte function with SEH frame; returns at 0x0074C26B (ret)", "VERIFIED: dynamically initializes lock critical section via _InitializeCriticalSectionEx (0x74C677)"]
+callees = [0x007453F0, 0x0074520B, 0x0074C275, 0x0074C677, 0x00740F1B, 0x0074C26C, 0x00745435]
+
+[[function]]
+rva = 0x0074C26C
+name = "_unlock_10"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte function; pushes 0xA, calls _unlock (0x74C185), returns at 0x0074C274"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x0074520B
+name = "_malloc_crt"
+convention = "cdecl"
+stack_purge = 0
+size = 64
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 64-byte function; returns at 0x0074524A (ret)", "VERIFIED: calls malloc (0x7410D2) and retries with Sleep (0x2A1690C) if needed"]
+callees = [0x007410D2]
+
+[[function]]
+rva = 0x007410D2
+name = "malloc"
+convention = "cdecl"
+stack_purge = 0
+size = 195
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 195-byte function; returns at 0x0074117E and 0x00741194 (ret)", "VERIFIED: calls HeapAlloc (0x2A169D0) on _crtheap"]
+callees = [0x0073FD74]
+
+[[function]]
+rva = 0x00740F1B
+name = "free"
+convention = "cdecl"
+stack_purge = 0
+size = 142
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 142-byte function with SEH frame; returns at 0x00740FA8 (ret)", "VERIFIED: frees memory via HeapFree (0x2A169CC) on _crtheap"]
+callees = [0x007453F0, 0x0074C275, 0x0074C185, 0x00745435, 0x0073FD74]
+
+[[function]]
+rva = 0x0073FD74
+name = "_errno"
+convention = "cdecl"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 19-byte function; returns at 0x0073FD82 and 0x0073FD86 (ret)", "VERIFIED: calls _getptd_noexit_real (0x744E31) and returns pointer to thread or global errno"]
+callees = [0x00744E31]
+
+[[function]]
+rva = 0x00744E31
+name = "_getptd_noexit_real"
+convention = "cdecl"
+stack_purge = 0
+size = 119
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 119-byte function; returns at 0x00744EA7 (ret)", "VERIFIED: queries TLS or creates per-thread data via _calloc_crt (0x74524B) and _initptd_locks (0x744D72)"]
+callees = [0x00744CEA, 0x0074524B, 0x00744C58, 0x00744D72, 0x00740F1B]
+
+[[function]]
+rva = 0x00744CEA
+name = "_getptd_wrapper"
+convention = "cdecl"
+stack_purge = 0
+size = 50
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 50-byte function; returns at 0x00744D1B (ret)", "VERIFIED: gets TLS data via TlsGetValue (0x2A16A00) or sets with TlsSetValue (0x2A16A08)"]
+callees = [0x00744C58]
+
+[[function]]
+rva = 0x0073E87E
+name = "_amsg_exit"
+convention = "cdecl"
+stack_purge = 0
+size = 36
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 36-byte function; returns at 0x0073E8A1 (ret)", "VERIFIED: runtime error handler for CRT"]
+callees = [0x00744C58]
+
+[[function]]
+rva = 0x007454A0
+name = "memset_sse2_helper"
+convention = "cdecl"
+stack_purge = 0
+size = 143
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 143-byte function; returns at 0x0074552E (ret)", "VERIFIED: SSE2-aligned block memset helper"]
+callees = [0x00745449]
+
+[[function]]
+rva = 0x00745449
+name = "memset_sse2_simd"
+convention = "cdecl"
+stack_purge = 0
+size = 87
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 87-byte function; returns at 0x0074549F (ret)", "VERIFIED: 128-byte loop using pxor and movdqa"]
+
+[[function]]
+rva = 0x007478DC
+name = "_initterm"
+convention = "cdecl"
+stack_purge = 0
+size = 36
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 36-byte function; returns at 0x007478FF (ret)", "VERIFIED: iterates table from 0x9306B0 to 0x9307B0 and invokes valid function pointers"]
+
+[[function]]
+rva = 0x00747650
+name = "_ioinit"
+convention = "cdecl"
+stack_purge = 0
+size = 576
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 576-byte function with SEH frame; returns at 0x0074788F (ret)", "VERIFIED: initializes CRT stdio streams stdin, stdout, stderr using GetStdHandle (0x2A16A20), GetFileType (0x2A16A3C), and SetHandleCount (0x2A16A38)"]
+callees = [0x007453F0, 0x0074524B, 0x0074C677, 0x00745435]
+
+[[function]]
+rva = 0x0074751B
+name = "_get_environ"
+convention = "cdecl"
+stack_purge = 0
+size = 309
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 309-byte function; returns at 0x0074764F (ret)", "VERIFIED: retrieves environment block via GetEnvironmentStringsW (0x2A16A34), converts with WideCharToMultiByte (0x2A16A30), frees with FreeEnvironmentStringsW (0x2A16A2C)"]
+callees = [0x0074520B, 0x00740F1B]
+
+[[function]]
+rva = 0x00747462
+name = "_setargv"
+convention = "cdecl"
+stack_purge = 0
+size = 185
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 185-byte function; returns at 0x0074751A (ret)", "VERIFIED: initializes CRT arguments __argc, __argv via GetModuleFileNameA (0x2A168D4), _parse_cmdline (0x7472CA) and _setmbcp (0x7500D3)"]
+callees = [0x007500D3, 0x007472CA, 0x0074520B]
+
+[[function]]
+rva = 0x007472CA
+name = "_parse_cmdline"
+convention = "cdecl"
+stack_purge = 0
+size = 408
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 408-byte function; returns at 0x00747461 (ret)", "VERIFIED: parses command line into argv array using _ismbblead (0x75BFB0) for multibyte lead byte check"]
+callees = [0x0075BFB0]
+
+[[function]]
+rva = 0x007500D3
+name = "_setmbcp"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 30-byte function; returns at 0x007500F0 (ret)", "VERIFIED: initializes multibyte code page via _setmbcp_l (0x74FF39) with -3 (CP_ACP)"]
+callees = [0x0074FF39]
+
+[[function]]
+rva = 0x0074FF39
+name = "_setmbcp_l"
+convention = "cdecl"
+stack_purge = 0
+size = 410
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 410-byte function with SEH; returns at 0x007500D2 (ret)", "VERIFIED: sets thread/global multibyte code page, queries _get_codepage (0x74FCAA), returns 0 if unchanged"]
+callees = [0x007453F0, 0x00744EA8, 0x0074FC06, 0x0074FCAA, 0x0074520B, 0x00740F1B, 0x0074C275, 0x0074C185, 0x0073FD74, 0x00745435, 0x0075009A]
+
+[[function]]
+rva = 0x0074FCAA
+name = "_get_codepage"
+convention = "cdecl"
+stack_purge = 0
+size = 122
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 122-byte function; returns at 0x0074FD23 (ret)", "VERIFIED: resolves codepage identifier (-2 OEM, -3 ACP) using GetOEMCP (0x2A168B0) and GetACP (0x2A168B4)"]
+callees = [0x00741F4D]
+
+[[function]]
+rva = 0x0074FC06
+name = "_updatetmbcinfo"
+convention = "cdecl"
+stack_purge = 0
+size = 164
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 164-byte function with SEH; returns at 0x0074FCA9 (ret)", "VERIFIED: updates thread multibyte info structure from global initial mbcinfo"]
+callees = [0x007453F0, 0x00744EA8, 0x0073E87E, 0x00745435, 0x0074C275, 0x00740F1B, 0x0074C185, 0x0074FCA1]
+
+[[function]]
+rva = 0x00744EA8
+name = "_getptd"
+convention = "cdecl"
+stack_purge = 0
+size = 24
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 24-byte function; returns at 0x00744EBF (ret)", "VERIFIED: gets per-thread data via _getptd_noexit_real (0x744E31) or calls _amsg_exit(0x10)"]
+callees = [0x00744E31, 0x0073E87E]
+
+[[function]]
+rva = 0x00741F4D
+name = "_locinfo_ctor"
+convention = "thiscall"
+stack_purge = 4
+size = 130
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 130-byte function; returns at 0x00741FCC (ret 4)", "VERIFIED: initializes _locale_t / locinfo struct from per-thread data (ECX = this)"]
+callees = [0x00744EA8, 0x007503B1, 0x0074FC06]
+
+[[function]]
+rva = 0x007503B1
+name = "_updatetlocale"
+convention = "cdecl"
+stack_purge = 0
+size = 118
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 118-byte function with SEH; returns at 0x00750426 (ret)", "VERIFIED: synchronizes per-thread locale info with global locale"]
+callees = [0x007453F0, 0x00744EA8, 0x0073E87E, 0x00745435, 0x0074C275, 0x00750373, 0x0074C185, 0x0075041B]
+
+[[function]]
+rva = 0x00750373
+name = "_free_locinfo"
+convention = "cdecl"
+stack_purge = 0
+size = 62
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 62-byte function; returns at 0x007503B0 (ret)", "VERIFIED: releases locinfo reference and frees buffers via _free_locinfo_buffers"]
+callees = [0x0075023D, 0x007502C3, 0x007500FD]
+
+[[function]]
+rva = 0x007502C3
+name = "_locinfo_dec_ref"
+convention = "cdecl"
+stack_purge = 0
+size = 140
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 140-byte function; returns at 0x0075034E (ret)", "VERIFIED: decrements reference counts of locinfo sub-structures using InterlockedDecrement (0x2A16A18)"]
+callees = []
+
+[[function]]
+rva = 0x007500FD
+name = "_free_locinfo_buffers"
+convention = "cdecl"
+stack_purge = 0
+size = 320
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 320-byte function; returns at 0x0075023C (ret)", "VERIFIED: frees allocated heap buffers in locinfo structure via free (0x740F1B)"]
+callees = [0x00740F1B, 0x0075F9CC, 0x0075F791, 0x0075F55B]
+
+[[function]]
+rva = 0x0075F9CC
+name = "_free_locinfo_buf_sub1"
+convention = "cdecl"
+stack_purge = 0
+size = 137
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 137-byte function; returns at 0x0075FA54 (ret)", "VERIFIED: frees locale time/date string buffers via free (0x740F1B)"]
+callees = [0x00740F1B]
+
+[[function]]
+rva = 0x0075F791
+name = "_free_locinfo_buf_sub2"
+convention = "cdecl"
+stack_purge = 0
+size = 64
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 64-byte function; returns at 0x0075F7D0 (ret)", "VERIFIED: frees locale numeric string buffers via free (0x740F1B)"]
+callees = [0x00740F1B]
+
+[[function]]
+rva = 0x0075F55B
+name = "_free_locinfo_buf_sub3"
+convention = "cdecl"
+stack_purge = 0
+size = 400
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 400-byte function; returns at 0x0075F6EA (ret)", "VERIFIED: frees locale monetary string buffers via free (0x740F1B)"]
+callees = [0x00740F1B]
+
+[[function]]
+rva = 0x0075BFB0
+name = "_ismbblead"
+convention = "cdecl"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 19-byte function; returns at 0x0075BFC2 (ret)", "VERIFIED: tests whether byte is lead byte of multibyte character via _ismbblead_l (0x75BDF2)"]
+callees = [0x0075BDF2]
+
+[[function]]
+rva = 0x0075BDF2
+name = "_ismbblead_l"
+convention = "cdecl"
+stack_purge = 0
+size = 81
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 81-byte function; returns at 0x0075BE42 (ret)", "VERIFIED: queries multibyte character info table for lead byte flag"]
+callees = [0x00741F4D]
+
+[[function]]
+rva = 0x0074FCA1
+name = "_updatetmbcinfo_unlock"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte SEH finally handler inside _updatetmbcinfo; returns at 0x0074FCA9 (ret)", "VERIFIED: calls _unlock(0xD) (0x74C185)"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x0075041B
+name = "_updatetlocale_unlock"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 12-byte SEH finally handler inside _updatetlocale; returns at 0x00750426 (ret)", "VERIFIED: calls _unlock(0xC) (0x74C185)"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x0075009A
+name = "_setmbcp_l_unlock"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte SEH finally handler inside _setmbcp_l; returns at 0x007500A2 (ret)", "VERIFIED: calls _unlock(0xD) (0x74C185)"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x00751EC0
+name = "strlen"
+convention = "cdecl"
+stack_purge = 0
+size = 144
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 144-byte function; returns at 0x00751F4A (ret)", "VERIFIED: optimized MSVC CRT string length implementation using dword-aligned scan"]
+callees = []
+
+[[function]]
+rva = 0x00740FA9
+name = "strcpy_s"
+convention = "cdecl"
+stack_purge = 0
+size = 101
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 101-byte function; returns at 0x0074100D (ret)", "VERIFIED: secure string copy with buffer size bounds checking and _errno (0x73FD74) updates"]
+callees = [0x0073FD74]
+
+[[function]]
+rva = 0x007471E5
+name = "_env_init"
+convention = "cdecl"
+stack_purge = 0
+size = 229
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 229-byte function; returns at 0x007472A9 (ret)", "VERIFIED: parses environment block into _environ array using strlen (0x751EC0), _calloc_crt (0x74524B), and strcpy_s (0x740FA9)"]
+callees = [0x007500D3, 0x00751EC0, 0x0074524B, 0x00740FA9, 0x00740F1B]
+
+[[function]]
+rva = 0x00747188
+name = "_get_cmdline_args"
+convention = "cdecl"
+stack_purge = 0
+size = 93
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 93-byte function; returns at 0x007471E4 (ret)", "VERIFIED: skips executable name in command line to return pointer to lpCmdLine for WinMain"]
+callees = [0x007500D3, 0x0075BFB0]
+
+[[function]]
+rva = 0x0073EABC
+name = "_cinit"
+convention = "cdecl"
+stack_purge = 0
+size = 146
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 146-byte function; returns at 0x0073EB4D (ret)", "VERIFIED: executes C++ static constructors table from 0x850000 to 0x8503C4"]
+callees = [0x0074499C, 0x0073E907, 0x0073CB3E, 0x0074C330]
+
+[[function]]
+rva = 0x0074499C
+name = "_decode_pointer_block"
+convention = "cdecl"
+stack_purge = 0
+size = 31
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 31-byte function; returns at 0x007449BA (ret)", "VERIFIED: decodes 10 function pointers at 0x9A6DE8 using _decode_pointer (0x744BE1)"]
+callees = [0x00744BE1]
+
+[[function]]
+rva = 0x0073E907
+name = "_initterm_e"
+convention = "cdecl"
+stack_purge = 0
+size = 32
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 32-byte function; returns at 0x0073E926 (ret)", "VERIFIED: iterates table of function pointers returning int, stops if any returns non-zero"]
+callees = []
+
+[[function]]
+rva = 0x0073CB3E
+name = "_atexit_wrapper"
+convention = "cdecl"
+stack_purge = 0
+size = 18
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 18-byte function; returns at 0x0073CB4F (ret)", "VERIFIED: wrapper for _atexit_core (0x73CB02) returning 0 on success"]
+callees = [0x0073CB02]
+
+[[function]]
+rva = 0x0073CB02
+name = "_atexit_core"
+convention = "cdecl"
+stack_purge = 0
+size = 54
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 54-byte function with SEH; returns at 0x0073CB37 (ret)", "VERIFIED: locks exit table via _lock_exit (0x73E8DD), registers exit function via _onexit_register (0x73CA1A), unlocks via _unlock_exit_sub (0x73CB38)"]
+callees = [0x007453F0, 0x0073E8DD, 0x0073CA1A, 0x0073CB38, 0x00745435]
+
+[[function]]
+rva = 0x0073E8DD
+name = "_lock_exit"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte function; returns at 0x0073E8E5 (ret)", "VERIFIED: calls _lock(8) (0x74C275)"]
+callees = [0x0074C275]
+
+[[function]]
+rva = 0x0073CB38
+name = "_unlock_exit_sub"
+convention = "cdecl"
+stack_purge = 0
+size = 6
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 6-byte function; returns at 0x0073CB3D (ret)", "VERIFIED: calls _unlock_exit (0x73E8E6)"]
+callees = [0x0073E8E6]
+
+[[function]]
+rva = 0x0073E8E6
+name = "_unlock_exit"
+convention = "cdecl"
+stack_purge = 0
+size = 9
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 9-byte function; returns at 0x0073E8EE (ret)", "VERIFIED: calls _unlock(8) (0x74C185)"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x0073CA1A
+name = "_onexit_register"
+convention = "cdecl"
+stack_purge = 0
+size = 185
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 185-byte function; returns at 0x0073CAD2 (ret)", "VERIFIED: adds function pointer to onexit table, decodes pointers via _decode_pointer (0x744BE1)"]
+callees = [0x00744C58, 0x00744BE1, 0x0074534A]
+
+[[function]]
+rva = 0x0073CAD3
+name = "_onexit_init"
+convention = "cdecl"
+stack_purge = 0
+size = 47
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 47-byte function; returns at 0x0073CB01 (ret)", "VERIFIED: allocates initial onexit table of 32 entries via _calloc_crt (0x74524B)"]
+callees = [0x0074524B, 0x00744BE1]
+
+[[function]]
+rva = 0x00740D80
+name = "_ioinit_handles"
+convention = "cdecl"
+stack_purge = 0
+size = 177
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 177-byte function; returns at 0x00740E30 (ret)", "VERIFIED: allocates lowio handle arrays via _calloc_crt (0x74524B)"]
+callees = [0x0074524B]
+
+[[function]]
+rva = 0x00744A49
+name = "_sse2_check_init"
+convention = "cdecl"
+stack_purge = 0
+size = 20
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 20-byte function; returns at 0x00744A5C (ret)", "VERIFIED: checks CPU SSE2 feature support via _check_cpu_features (0x7561C8)"]
+callees = [0x007561C8]
+
+[[function]]
+rva = 0x007561C8
+name = "_check_cpu_features"
+convention = "cdecl"
+stack_purge = 0
+size = 96
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 96-byte function; returns at 0x00756227 (ret)", "VERIFIED: uses cpuid instruction to query CPU features and calls _check_sse2_support (0x756178)"]
+callees = [0x00756178]
+
+[[function]]
+rva = 0x00756178
+name = "_check_sse2_support"
+convention = "cdecl"
+stack_purge = 0
+size = 80
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 80-byte function with SEH; returns at 0x007561C7 (ret)", "VERIFIED: executes movapd xmm0, xmm1 inside SEH frame to verify OS SSE2 support"]
+callees = [0x007453F0, 0x00745435]
+
+[[function]]
+rva = 0x00756228
+name = "_sse2_init_sub"
+convention = "cdecl"
+stack_purge = 0
+size = 13
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 13-byte function; returns at 0x00756234 (ret)", "VERIFIED: calls _check_cpu_features (0x7561C8) and stores result in _sse2_enabled"]
+callees = [0x007561C8]
+
+[[function]]
+rva = 0x00746DD5
+name = "_set_unhandled_filter_init"
+convention = "cdecl"
+stack_purge = 0
+size = 14
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 14-byte function; returns at 0x00746DE2 (ret)", "VERIFIED: registers top-level unhandled exception filter 0x746D98 via SetUnhandledExceptionFilter (0x2A169F4)"]
+callees = []
+
+[[function]]
+rva = 0x00746D98
+name = "_unhandled_cpp_filter"
+convention = "stdcall"
+stack_purge = 4
+size = 61
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 61-byte function; returns at 0x00746DD2 (ret 4)", "VERIFIED: checks for MSVC C++ exception code 0xE06D7363"]
+callees = []
+
+[[function]]
+rva = 0x0074C330
+name = "_ValidateImageBase"
+convention = "cdecl"
+stack_purge = 0
+size = 187
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 187-byte function with SEH; returns at 0x0074C3EA (ret)", "VERIFIED: checks PE header at 0x400000 via _check_pe_header (0x74C2B0) and validates section via _find_pe_section (0x74C2E0)"]
+callees = [0x0074C2B0, 0x0074C2E0]
+
+[[function]]
+rva = 0x0074C2B0
+name = "_check_pe_header"
+convention = "cdecl"
+stack_purge = 0
+size = 48
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 48-byte function; returns at 0x0074C2D8 (ret)", "VERIFIED: checks DOS MZ header and PE signature with optional header magic 0x10B"]
+callees = []
+
+[[function]]
+rva = 0x0074C2E0
+name = "_find_pe_section"
+convention = "cdecl"
+stack_purge = 0
+size = 80
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 80-byte function; returns at 0x0074C321 (ret)", "VERIFIED: finds PE section containing specified RVA by scanning IMAGE_SECTION_HEADER table"]
+callees = []
+
+[[function]]
+rva = 0x0073C93B
+name = "_initp_misc_cfltcvt_tab"
+convention = "cdecl"
+stack_purge = 0
+size = 37
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 37-byte function; returns at 0x0073C958 (ret)", "VERIFIED: populates floating point conversion function pointer table and initializes FPU control word"]
+callees = [0x0073C8CB, 0x00744A20, 0x007449BB]
+
+[[function]]
+rva = 0x0073C8CB
+name = "_init_cfltcvt_tab"
+convention = "cdecl"
+stack_purge = 0
+size = 96
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 96-byte function; returns at 0x0073C92A (ret)", "VERIFIED: fills 10 function pointers in cfltcvt table at 0x9A6DE8"]
+callees = []
+
+[[function]]
+rva = 0x00744A20
+name = "_init_fdiv_check"
+convention = "cdecl"
+stack_purge = 0
+size = 41
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 41-byte function; returns at 0x00744A43 (ret) or jumps to 0x7449E4", "VERIFIED: checks for Pentium FDIV bug via GetProcAddress in msvcrt or falls back to software check (0x7449E4)"]
+callees = [0x007449E4]
+
+[[function]]
+rva = 0x007449E4
+name = "_fdiv_test"
+convention = "cdecl"
+stack_purge = 0
+size = 60
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 60-byte function; returns at 0x00744A1B (ret)", "VERIFIED: divides known numbers using fdiv and compares against 1.0 to detect FDIV flaw"]
+callees = []
+
+[[function]]
+rva = 0x007449BB
+name = "_init_fp_control"
+convention = "cdecl"
+stack_purge = 0
+size = 41
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 41-byte function; returns at 0x007449E3 (ret)", "VERIFIED: sets default FPU control word (0x10000/0x30000) via _controlfp_s (0x74C73C)"]
+callees = [0x0074C73C]
+
+[[function]]
+rva = 0x0074C73C
+name = "_controlfp_s"
+convention = "cdecl"
+stack_purge = 0
+size = 106
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 106-byte function; returns at 0x0074C7A5 (ret)", "VERIFIED: validates mask and sets FPU control word via _controlfp (0x73F72D)"]
+callees = [0x0073F72D, 0x0073FD74]
+
+[[function]]
+rva = 0x0073F72D
+name = "_controlfp"
+convention = "cdecl"
+stack_purge = 0
+size = 771
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 771-byte function; returns at 0x0073FA2F (ret)", "VERIFIED: manages x87 FPU and SSE MXCSR control words via stmxcsr/ldmxcsr and fnstcw/fldcw"]
+callees = [0x0073EDE1, 0x0073EF4A, 0x0074C856]
+
+[[function]]
+rva = 0x0073EF4A
+name = "_fpcvt_flags"
+convention = "cdecl"
+stack_purge = 0
+size = 160
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 160-byte function; returns at 0x0073EFDF (ret)", "VERIFIED: converts x87 FPU control flags to SSE MXCSR control flags"]
+callees = []
+
+[[function]]
+rva = 0x0074C856
+name = "_set_mxcsr"
+convention = "cdecl"
+stack_purge = 0
+size = 114
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 114-byte function with SEH; returns at 0x0074C8C7 (ret)", "VERIFIED: sets SSE MXCSR register using ldmxcsr inside SEH frame"]
+callees = [0x007453F0, 0x00745435]
+
+[[function]]
+rva = 0x0073EDE1
+name = "_fpcvt_87_flags"
+convention = "cdecl"
+stack_purge = 0
+size = 142
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 142-byte function; returns at 0x0073EE6E (ret)", "VERIFIED: converts control word bits from CRT format to x87 FPU hardware control word format"]
+callees = []
+
+[[function]]
+rva = 0x0074534A
+name = "_msize"
+convention = "cdecl"
+stack_purge = 0
+size = 146
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 146-byte function with SEH; returns at 0x007453DB (ret)", "VERIFIED: retrieves heap block size via HeapSize (0x2A16A1C) or SBH, locks heap via _lock(4) (0x74C275), unlocks via finally helper 0x7453E4"]
+callees = [0x007453F0, 0x0073FD74, 0x00743604, 0x0074C275, 0x0074E4AA, 0x007453E4, 0x00745435]
+
+[[function]]
+rva = 0x007453E4
+name = "_msize_unlock"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 12-byte SEH finally handler; returns at 0x007453EC (ret)", "VERIFIED: unlocks heap lock via _unlock(4) (0x74C185)"]
+callees = [0x0074C185]
+
+[[function]]
+rva = 0x0074E4AA
+name = "_get_sbh_threshold"
+convention = "cdecl"
+stack_purge = 0
+size = 43
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 43-byte function; returns at 0x0074E4D4 (ret)", "VERIFIED: checks if address is within small block heap regions"]
+callees = []
+
+[[function]]
+rva = 0x00743604
+name = "_invalid_parameter"
+convention = "cdecl"
+stack_purge = 0
+size = 52
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 52-byte function; returns at 0x00743637 (ret)", "VERIFIED: decodes handler via _decode_pointer (0x744C58) or calls _invoke_watson (0x7434D0)"]
+callees = [0x00744C58, 0x00754745, 0x007434D0]
+
+[[function]]
+rva = 0x007434D0
+name = "_invoke_watson"
+convention = "cdecl"
+stack_purge = 0
+size = 252
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 252-byte function; returns at 0x007435CB (leave; ret)", "VERIFIED: captures crash context, calls memset (0x73CB50) and raises exception"]
+callees = [0x0073CB50, 0x00754745, 0x0073CA0B]
+
+[[function]]
+rva = 0x00754745
+name = "_clear_watson_flag"
+convention = "cdecl"
+stack_purge = 0
+size = 8
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 8-byte function; returns at 0x0075474C (ret)", "VERIFIED: clears flag at 0x2A13F68"]
+callees = []
+
+[[function]]
+rva = 0x0084BA40
+name = "static_init_0084BA40"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 12-byte static constructor; returns at 0x0084BA4B (ret)", "VERIFIED: registers atexit handler 0x84DDF0 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084DDF0
+name = "static_dtor_0084DDF0"
+convention = "cdecl"
+stack_purge = 0
+size = 1
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 1-byte dummy destructor; returns at 0x0084DDF0 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084BA50
+name = "static_init_0084BA50"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 11-byte static constructor; returns at 0x0084BA5A (ret)", "VERIFIED: initializes global 0x9C51E0 from 0x96696C"]
+callees = []
+
+[[function]]
+rva = 0x0084BA60
+name = "static_init_0084BA60"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 11-byte static constructor; returns at 0x0084BA6A (ret)", "VERIFIED: initializes global 0x9C51DC from 0x96696C"]
+callees = []
+
+[[function]]
+rva = 0x0084BA70
+name = "static_init_0084BA70"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 11-byte static constructor; returns at 0x0084BA7A (ret)", "VERIFIED: initializes global 0x9C51D8 from 0x96696C"]
+callees = []
+
+[[function]]
+rva = 0x0084BA80
+name = "static_init_0084BA80"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 11-byte static constructor; returns at 0x0084BA8A (ret)", "VERIFIED: initializes global 0x9C51E4 from 0x96696C"]
+callees = []
+
+[[function]]
+rva = 0x0084BA90
+name = "static_init_0084BA90"
+convention = "cdecl"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 19-byte static constructor; returns at 0x0084BAA2 (ret)", "VERIFIED: computes float product 0x93D824 * 0x8513F0 and stores in 0x9C7FE8"]
+callees = []
+
+[[function]]
+rva = 0x0084BAB0
+name = "static_init_0084BAB0"
+convention = "cdecl"
+stack_purge = 0
+size = 108
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 108-byte static constructor; returns at 0x0084BB1B (ret)", "VERIFIED: initializes global array 0x9C9E7C..0x9C9EB4 from defaults"]
+callees = []
+
+[[function]]
+rva = 0x0084BB40
+name = "static_init_0084BB40"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; returns at 0x0084BB66 (ret)", "VERIFIED: constructs array of 4 objects of size 0x4B4 at 0x9CA360 via __ehvec_ctor (0x73D235), registers destructor 0x84DE00 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0073D235, 0x0073CB3E]
+
+[[function]]
+rva = 0x0073D235
+name = "__ehvec_ctor"
+convention = "stdcall"
+stack_purge = 20
+size = 77
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 77-byte MSVC C++ vector constructor helper; returns at 0x0073D27F (ret 0x14)", "VERIFIED: calls constructor on array elements, catches exceptions via SEH finally 0x73D282"]
+callees = [0x007453F0, 0x0073D282, 0x00745435]
+
+[[function]]
+rva = 0x0073D282
+name = "__ehvec_ctor_finally"
+convention = "cdecl"
+stack_purge = 0
+size = 24
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 24-byte SEH finally handler for __ehvec_ctor; returns at 0x0073D299 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x004015F5
+name = "thunk_sub_004DBA90"
+convention = "cdecl"
+stack_purge = 0
+size = 5
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 5-byte ILT jump thunk; jumps to 0x004DBA90"]
+callees = [0x004DBA90]
+
+[[function]]
+rva = 0x004DBA90
+name = "sub_004DBA90"
+convention = "cdecl"
+stack_purge = 0
+size = 13
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 13-byte object constructor; returns at 0x004DBA9C (ret)", "VERIFIED: initializes [ecx + 0x4B0] = 0"]
+callees = []
+
+[[function]]
+rva = 0x00401E5B
+name = "thunk_sub_004DBAA0"
+convention = "cdecl"
+stack_purge = 0
+size = 5
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 5-byte ILT jump thunk; jumps to 0x004DBAA0"]
+callees = [0x004DBAA0]
+
+[[function]]
+rva = 0x004DBAA0
+name = "sub_004DBAA0"
+convention = "cdecl"
+stack_purge = 0
+size = 1
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 1-byte dummy destructor; returns at 0x004DBAA0 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084DE00
+name = "static_dtor_0084DE00"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte destructor stub for 0x9CA360; returns via jmp"]
+callees = []
+
+[[function]]
+rva = 0x0084BB70
+name = "static_init_0084BB70"
+convention = "cdecl"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 19-byte static constructor; returns at 0x0084BB82 (ret)", "VERIFIED: computes float addition 0x943140 + 0x94313C and stores in 0x9CC0D8"]
+callees = []
+
+[[function]]
+rva = 0x0084BB90
+name = "static_init_0084BB90"
+convention = "cdecl"
+stack_purge = 0
+size = 69
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 69-byte static constructor; returns at 0x0084BBD4 (ret)", "VERIFIED: initializes 3D vector globals 0x943CD4..0x943CFC from defaults"]
+callees = []
+
+[[function]]
+rva = 0x0084BBF0
+name = "static_init_0084BBF0"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte static constructor; calls 0x524100 with ecx=0x94AC40"]
+callees = [0x00524100]
+
+[[function]]
+rva = 0x00524100
+name = "sub_00524100"
+convention = "cdecl"
+stack_purge = 0
+size = 517
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 517-byte display options initialization; returns at 0x00524304 (ret)", "VERIFIED: checks resolution 1024x768 defaults, calls aspect ratio helper 0x52A780 and security check 0x73CA0B"]
+callees = [0x0052A780, 0x0073CA0B]
+
+[[function]]
+rva = 0x0052A780
+name = "sub_0052A780"
+convention = "stdcall"
+stack_purge = 8
+size = 206
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 206-byte aspect ratio calculator; returns at 0x0052A84B (ret 8)", "VERIFIED: calculates width / height and classifies 4:3, 16:9, 16:10 modes"]
+callees = []
+
+[[function]]
+rva = 0x0084BC00
+name = "static_init_0084BC00"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 22-byte static constructor; calls 0x52A330 on 0x9CF8D0, registers destructor 0x84DE10 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0052A330, 0x0073CB3E]
+
+[[function]]
+rva = 0x0052A330
+name = "sub_0052A330"
+convention = "cdecl"
+stack_purge = 0
+size = 575
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 575-byte graphics configuration object constructor; returns at 0x0052A56E (ret)", "VERIFIED: initializes defaults and zeros sub-structures using memset (0x73CB50)"]
+callees = [0x0073CB50]
+
+[[function]]
+rva = 0x0084DE10
+name = "static_dtor_0084DE10"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte static destructor stub for 0x9CF8D0; returns via jmp"]
+callees = []
+
+[[function]]
+rva = 0x0084BC20
+name = "static_init_0084BC20"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 22-byte static constructor; calls 0x51E870 on 0x9CF888, registers destructor 0x84DE20 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0051E870, 0x0073CB3E]
+
+[[function]]
+rva = 0x0051E870
+name = "sub_0051E870"
+convention = "cdecl"
+stack_purge = 0
+size = 82
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 82-byte object constructor; returns at 0x0051E8C1 (ret)", "VERIFIED: initializes defaults and clears buffers at 0x9CEB50 and 0x9CEC50 using memset (0x73CB50)"]
+callees = [0x0073CB50]
+
+[[function]]
+rva = 0x0084DE20
+name = "static_dtor_0084DE20"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte static destructor stub for 0x9CF888; returns via jmp"]
+callees = []
+
+[[function]]
+rva = 0x0084BC40
+name = "static_init_0084BC40"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 22-byte static constructor; calls 0x52FCB0 on 0x9CF380, registers destructor 0x84DE30 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0052FCB0, 0x0073CB3E]
+
+[[function]]
+rva = 0x0052FCB0
+name = "sub_0052FCB0"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 30-byte object constructor; returns at 0x0052FCCD (ret)", "VERIFIED: initializes fields of object at ecx"]
+callees = []
+
+[[function]]
+rva = 0x0084DE30
+name = "static_dtor_0084DE30"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte static destructor stub for 0x9CF380; returns via jmp"]
+callees = []
+
+[[function]]
+rva = 0x0084BC60
+name = "static_init_0084BC60"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte static constructor; calls 0x52FDA0 on 0x9D5978"]
+callees = [0x0052FDA0]
+
+[[function]]
+rva = 0x0052FDA0
+name = "sub_0052FDA0"
+convention = "cdecl"
+stack_purge = 0
+size = 128
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 128-byte array reset routine; returns at 0x0052FE1F (ret)", "VERIFIED: fills array at ecx with 0xFFFFFFFF using rep stosd"]
+callees = []
+
+[[function]]
+rva = 0x0084BC70
+name = "static_init_0084BC70"
+convention = "cdecl"
+stack_purge = 0
+size = 42
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 42-byte static constructor; returns at 0x0084BC99 (ret)", "VERIFIED: initializes critical section at 0x9D5D78, registers destructor 0x84DE40 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084DE40
+name = "static_dtor_0084DE40"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte static destructor stub for critical section 0x9D5D78; returns via jmp"]
+callees = []
+
+[[function]]
+rva = 0x0084BCA0
+name = "static_init_0084BCA0"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 12-byte static constructor; registers destructor 0x84DE50 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084DE50
+name = "static_dtor_0084DE50"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 11-byte static destructor; returns at 0x0084DE5A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084BCB0
+name = "static_init_0084BCB0"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 12-byte static constructor; registers destructor 0x84DE60 via _atexit_wrapper (0x73CB3E)"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084DE60
+name = "static_dtor_0084DE60"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 11-byte static destructor; returns at 0x0084DE6A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x004011DB
+name = "thunk_sub_00404420"
+convention = "stdcall"
+stack_purge = 16
+size = 5
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 5-byte ILT jump thunk; jumps to 0x00404420"]
+callees = [0x00404420]
+
+[[function]]
+rva = 0x00404420
+name = "sub_00404420"
+convention = "stdcall"
+stack_purge = 16
+size = 32
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 32-byte Vector4 constructor; returns at 0x0040443D (ret 0x10)", "VERIFIED: loads 4 float arguments and stores into [ecx]..[ecx+12]"]
+callees = []
+
+[[function]]
+rva = 0x004021FD
+name = "thunk_sub_00404450"
+convention = "stdcall"
+stack_purge = 64
+size = 5
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 5-byte ILT jump thunk; jumps to 0x00404450"]
+callees = [0x00404450]
+
+[[function]]
+rva = 0x00404450
+name = "sub_00404450"
+convention = "stdcall"
+stack_purge = 64
+size = 116
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 116-byte Matrix4x4 constructor; returns at 0x004044C1 (ret 0x40)", "VERIFIED: loads 16 float arguments and stores into [ecx]..[ecx+60]"]
+callees = []
+
+[[function]]
+rva = 0x0084BCC0
+name = "static_init_0084BCC0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA36530 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BCF0
+name = "static_init_0084BCF0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA36520 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BD20
+name = "static_init_0084BD20"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA364B0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BD50
+name = "static_init_0084BD50"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA36540 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BD80
+name = "static_init_0084BD80"
+convention = "cdecl"
+stack_purge = 0
+size = 43
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 43-byte static constructor; initializes Vector4 at 0xA364D0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BDB0
+name = "static_init_0084BDB0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA364C0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BDE0
+name = "static_init_0084BDE0"
+convention = "cdecl"
+stack_purge = 0
+size = 111
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 111-byte static constructor; initializes Matrix4x4 at 0xA364F0 via 0x4021FD"]
+callees = [0x004021FD]
+
+[[function]]
+rva = 0x0084BE50
+name = "static_init_0084BE50"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92E90 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BE80
+name = "static_init_0084BE80"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92E80 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BEB0
+name = "static_init_0084BEB0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92E10 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BEE0
+name = "static_init_0084BEE0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92EA0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BF10
+name = "static_init_0084BF10"
+convention = "cdecl"
+stack_purge = 0
+size = 43
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 43-byte static constructor; initializes Vector4 at 0xA92E30 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BF40
+name = "static_init_0084BF40"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92E20 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084BF70
+name = "static_init_0084BF70"
+convention = "cdecl"
+stack_purge = 0
+size = 111
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 111-byte static constructor; initializes Matrix4x4 at 0xA92E50 via 0x4021FD"]
+callees = [0x004021FD]
+
+[[function]]
+rva = 0x0084BFE0
+name = "static_init_0084BFE0"
+convention = "cdecl"
+stack_purge = 0
+size = 15
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 15-byte static constructor; calls 0x590570 on 0xA365D8"]
+callees = [0x00590570]
+
+[[function]]
+rva = 0x00590570
+name = "sub_00590570"
+convention = "cdecl"
+stack_purge = 0
+size = 68
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 68-byte array constructor; returns at 0x005905B3 (ret)", "VERIFIED: constructs sub-arrays via 0x402144 using element constructors 0x5905C0 and 0x590930"]
+callees = [0x00402144, 0x005905C0, 0x00590930]
+
+[[function]]
+rva = 0x00402144
+name = "thunk_sub_004087A0"
+convention = "stdcall"
+stack_purge = 16
+size = 5
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 5-byte ILT jump thunk; jumps to 0x004087A0"]
+callees = [0x004087A0]
+
+[[function]]
+rva = 0x004087A0
+name = "sub_004087A0"
+convention = "stdcall"
+stack_purge = 16
+size = 50
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 50-byte array constructor helper; returns at 0x004087CF (ret 0x10)", "VERIFIED: iterates count elements and calls ctor callback on each element"]
+callees = []
+
+[[function]]
+rva = 0x005905C0
+name = "sub_005905C0"
+convention = "cdecl"
+stack_purge = 0
+size = 33
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 33-byte element constructor; returns at 0x005905E0 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x00590930
+name = "sub_00590930"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 22-byte element constructor; returns at 0x00590945 (ret)", "VERIFIED: calls 0x590630"]
+callees = [0x00590630]
+
+[[function]]
+rva = 0x00590630
+name = "sub_00590630"
+convention = "cdecl"
+stack_purge = 0
+size = 48
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 48-byte object constructor; returns at 0x0059065F (ret)", "VERIFIED: clears byte flags and pointer in object"]
+callees = []
+
+[[function]]
+rva = 0x0084BFF0
+name = "static_init_0084BFF0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92F70 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C020
+name = "static_init_0084C020"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92F60 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C050
+name = "static_init_0084C050"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92EF0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C080
+name = "static_init_0084C080"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92F80 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C0B0
+name = "static_init_0084C0B0"
+convention = "cdecl"
+stack_purge = 0
+size = 43
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 43-byte static constructor; initializes Vector4 at 0xA92F10 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C0E0
+name = "static_init_0084C0E0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92F00 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C110
+name = "static_init_0084C110"
+convention = "cdecl"
+stack_purge = 0
+size = 111
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 111-byte static constructor; initializes Matrix4x4 at 0xA92F30 via 0x4021FD"]
+callees = [0x004021FD]
+
+[[function]]
+rva = 0x0084C180
+name = "static_init_0084C180"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA93000 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C1B0
+name = "static_init_0084C1B0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92FF0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C1E0
+name = "static_init_0084C1E0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92F90 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C210
+name = "static_init_0084C210"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA93010 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C240
+name = "static_init_0084C240"
+convention = "cdecl"
+stack_purge = 0
+size = 43
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 43-byte static constructor; initializes Vector4 at 0xA92FB0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C270
+name = "static_init_0084C270"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 39-byte static constructor; initializes Vector4 at 0xA92FA0 via 0x4011DB"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C2A0
+name = "static_init_0084C2A0"
+convention = "cdecl"
+stack_purge = 0
+size = 111
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 111-byte static constructor; initializes Matrix4x4 at 0xA92FD0 via 0x4021FD"]
+callees = [0x004021FD]
+
+[[function]]
+rva = 0x0084C310
+name = "static_init_0084C310"
+convention = "cdecl"
+stack_purge = 0
+size = 159
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 159-byte static constructor; returns at 0x0084C3AE (ret)", "VERIFIED: initializes object at 0xA93038 and zeroes buffers using memset (0x73CB50)"]
+callees = [0x0073CB50]
+
+[[function]]
+rva = 0x0084C3B0
+name = "static_init_0084C3B0"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 30-byte static constructor; returns at 0x0084C3CD (ret)", "VERIFIED: initializes pointers at 0xA93670 and 0xA93688"]
+callees = []
+
+[[function]]
+rva = 0x0084C3D0
+name = "static_init_0084C3D0"
+convention = "cdecl"
+stack_purge = 0
+size = 69
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 69-byte static constructor; returns at 0x0084C414 (ret)", "VERIFIED: initializes 3D vector globals 0x95DC84..0x95DCAC from defaults"]
+callees = []
+
+[[function]]
+rva = 0x0084C420
+name = "static_init_0084C420"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x536290 and registers dtor 0x84DE70"]
+callees = [0x00536290, 0x0073CB3E]
+
+[[function]]
+rva = 0x00536290
+name = "sub_00536290"
+convention = "thiscall"
+stack_purge = 0
+size = 66
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 66-byte constructor; initializes fields at ecx; returns at 0x005362D1 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C440
+name = "static_init_0084C440"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DE80"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C450
+name = "static_init_0084C450"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DE90"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C460
+name = "static_init_0084C460"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DEA0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C470
+name = "static_init_0084C470"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DEB0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C480
+name = "static_init_0084C480"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DEC0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C490
+name = "static_init_0084C490"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DED0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C4A0
+name = "static_init_0084C4A0"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DEE0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C4B0
+name = "static_init_0084C4B0"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DEF0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C4C0
+name = "static_init_0084C4C0"
+convention = "cdecl"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; FP addition and store; returns at 0x0084C4D2 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C4E0
+name = "static_init_0084C4E0"
+convention = "cdecl"
+stack_purge = 0
+size = 70
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x672460 twice and zeroes fields; returns at 0x0084C525 (ret)"]
+callees = [0x00672460]
+
+[[function]]
+rva = 0x00672460
+name = "sub_00672460"
+convention = "thiscall"
+stack_purge = 8
+size = 143
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 143-byte member function; returns at 0x006724EC (ret 8)"]
+callees = []
+
+[[function]]
+rva = 0x0084C530
+name = "static_init_0084C530"
+convention = "cdecl"
+stack_purge = 0
+size = 123
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies config float/byte fields; returns at 0x0084C5AA (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C5B0
+name = "static_init_0084C5B0"
+convention = "cdecl"
+stack_purge = 0
+size = 72
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies dwords; returns at 0x0084C5F7 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C600
+name = "static_init_0084C600"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies dword; returns at 0x0084C60A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C610
+name = "static_init_0084C610"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies dword; returns at 0x0084C61A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C620
+name = "static_init_0084C620"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies dword; returns at 0x0084C62A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C630
+name = "static_init_0084C630"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies dword; returns at 0x0084C63A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C640
+name = "static_init_0084C640"
+convention = "cdecl"
+stack_purge = 0
+size = 11
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; copies dword; returns at 0x0084C64A (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C650
+name = "static_init_0084C650"
+convention = "cdecl"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; tail jmp to 0x695A60"]
+callees = [0x00695A60]
+
+[[function]]
+rva = 0x00695A60
+name = "sub_00695A60"
+convention = "thiscall"
+stack_purge = 0
+size = 255
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 255-byte table generator; returns at 0x00695B5E (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C660
+name = "static_init_0084C660"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DF80"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C670
+name = "static_init_0084C670"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84DFC0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C680
+name = "static_init_0084C680"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x6F3BA0 and registers dtor 0x84DF00"]
+callees = [0x006F3BA0, 0x0073CB3E]
+
+[[function]]
+rva = 0x0084C6A0
+name = "static_init_0084C6A0"
+convention = "cdecl"
+stack_purge = 0
+size = 22
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x6F3BA0 and registers dtor 0x84DF20"]
+callees = [0x006F3BA0, 0x0073CB3E]
+
+[[function]]
+rva = 0x006F3BA0
+name = "sub_006F3BA0"
+convention = "thiscall"
+stack_purge = 0
+size = 120
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 120-byte constructor; returns at 0x006F3C07 and 0x006F3C17 (ret)"]
+callees = [0x006E8550, 0x0073CB50]
+
+[[function]]
+rva = 0x006E8550
+name = "sub_006E8550"
+convention = "thiscall"
+stack_purge = 0
+size = 81
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 81-byte cleanup function; returns at 0x006E85A0 (ret)"]
+callees = [0x006E47C0]
+
+[[function]]
+rva = 0x006E47C0
+name = "sub_006E47C0"
+convention = "thiscall"
+stack_purge = 0
+size = 270
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 270-byte cleanup helper; returns at 0x006E48CD (ret)"]
+callees = [0x0073CB50]
+
+[[function]]
+rva = 0x0084C6C0
+name = "static_init_0084C6C0"
+convention = "cdecl"
+stack_purge = 0
+size = 32
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x6DC150 and registers dtor 0x84E000"]
+callees = [0x006DC150, 0x0073CB3E]
+
+[[function]]
+rva = 0x006DC150
+name = "sub_006DC150"
+convention = "thiscall"
+stack_purge = 8
+size = 27
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 27-byte buffer init; returns at 0x006DC168 (ret 8)"]
+callees = []
+
+[[function]]
+rva = 0x0084C6E0
+name = "static_init_0084C6E0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls __ehvec_ctor (0x73D235) and registers dtor 0x84E030"]
+callees = [0x0073D235, 0x0073CB3E]
+
+[[function]]
+rva = 0x006FDB60
+name = "sub_006FDB60"
+convention = "thiscall"
+stack_purge = 0
+size = 10
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 10-byte element ctor; returns at 0x006FDB69 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x006FDB70
+name = "sub_006FDB70"
+convention = "thiscall"
+stack_purge = 0
+size = 1
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 1-byte element dtor; returns at 0x006FDB70 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C710
+name = "static_init_0084C710"
+convention = "cdecl"
+stack_purge = 0
+size = 75
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls __ehvec_ctor (0x73D235) and registers dtor 0x84E050"]
+callees = [0x0073D235, 0x0073CB3E]
+
+[[function]]
+rva = 0x00704250
+name = "sub_00704250"
+convention = "thiscall"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 19-byte element ctor; returns at 0x00704262 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x00704270
+name = "sub_00704270"
+convention = "thiscall"
+stack_purge = 0
+size = 1
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 1-byte element dtor; returns at 0x00704270 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C760
+name = "static_init_0084C760"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls __ehvec_ctor (0x73D235) and registers dtor 0x84E010"]
+callees = [0x0073D235, 0x0073CB3E]
+
+[[function]]
+rva = 0x0073A630
+name = "sub_0073A630"
+convention = "thiscall"
+stack_purge = 0
+size = 40
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 40-byte element ctor; returns at 0x0073A657 (ret)"]
+callees = [0x00738F60]
+
+[[function]]
+rva = 0x00738F60
+name = "sub_00738F60"
+convention = "thiscall"
+stack_purge = 0
+size = 97
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 97-byte sub-ctor; returns at 0x00738FC0 (ret)"]
+callees = [0x00734CB0]
+
+[[function]]
+rva = 0x00734CB0
+name = "sub_00734CB0"
+convention = "thiscall"
+stack_purge = 0
+size = 220
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 220-byte bit allocator; returns at 0x00734D8B (ret)"]
+callees = []
+
+[[function]]
+rva = 0x006FEC20
+name = "sub_006FEC20"
+convention = "thiscall"
+stack_purge = 0
+size = 1
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 1-byte element dtor; returns at 0x006FEC20 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C790
+name = "static_init_0084C790"
+convention = "cdecl"
+stack_purge = 0
+size = 24
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x58FD90"]
+callees = [0x0058FD90]
+
+[[function]]
+rva = 0x0084C7B0
+name = "static_init_0084C7B0"
+convention = "cdecl"
+stack_purge = 0
+size = 19
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x58F650"]
+callees = [0x0058F650]
+
+[[function]]
+rva = 0x0058FD90
+name = "sub_0058FD90"
+convention = "cdecl"
+stack_purge = 0
+size = 66
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 66-byte hash table inserter; returns at 0x0058FDD1 (ret)"]
+callees = [0x0058F650]
+
+[[function]]
+rva = 0x0058F650
+name = "sub_0058F650"
+convention = "cdecl"
+stack_purge = 0
+size = 72
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 72-byte FNV hash calculator; returns at 0x0058F697 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C7D0
+name = "static_init_0084C7D0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4011DB (Vector4 ctor)"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C800
+name = "static_init_0084C800"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4011DB (Vector4 ctor)"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C830
+name = "static_init_0084C830"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4011DB (Vector4 ctor)"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C860
+name = "static_init_0084C860"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4011DB (Vector4 ctor)"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C890
+name = "static_init_0084C890"
+convention = "cdecl"
+stack_purge = 0
+size = 43
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4011DB (Vector4 ctor)"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C8C0
+name = "static_init_0084C8C0"
+convention = "cdecl"
+stack_purge = 0
+size = 39
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4011DB (Vector4 ctor)"]
+callees = [0x004011DB]
+
+[[function]]
+rva = 0x0084C8F0
+name = "static_init_0084C8F0"
+convention = "cdecl"
+stack_purge = 0
+size = 111
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x4021FD (Matrix4x4 ctor)"]
+callees = [0x004021FD]
+
+[[function]]
+rva = 0x0084C960
+name = "static_init_0084C960"
+convention = "cdecl"
+stack_purge = 0
+size = 24
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x402144 (vector ctor)"]
+callees = [0x00402144, 0x004013CF]
+
+[[function]]
+rva = 0x004013CF
+name = "ilt_sub_00492AB0"
+convention = "thiscall"
+stack_purge = 0
+size = 5
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 5-byte ILT thunk to 0x492AB0"]
+callees = [0x00492AB0]
+
+[[function]]
+rva = 0x00492AB0
+name = "sub_00492AB0"
+convention = "thiscall"
+stack_purge = 0
+size = 3
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 3-byte trivial ctor; returns at 0x00492AB2 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C980
+name = "static_init_0084C980"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84E080"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084C990
+name = "static_init_0084C990"
+convention = "cdecl"
+stack_purge = 0
+size = 87
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; calls 0x591270 and registers dtor 0x84E0D0"]
+callees = [0x00591270, 0x0073CB3E]
+
+[[function]]
+rva = 0x00591270
+name = "sub_00591270"
+convention = "thiscall"
+stack_purge = 0
+size = 20
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: 20-byte object ctor; returns at 0x00591283 (ret)"]
+callees = []
+
+[[function]]
+rva = 0x0084C9F0
+name = "static_init_0084C9F0"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84E090"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084CA00
+name = "static_init_0084CA00"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84E0B0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084CA10
+name = "static_init_0084CA10"
+convention = "cdecl"
+stack_purge = 0
+size = 12
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; registers dtor 0x84E0C0"]
+callees = [0x0073CB3E]
+
+[[function]]
+rva = 0x0084CA20
+name = "static_init_0084CA20"
+convention = "cdecl"
+stack_purge = 0
+size = 30
+confidence = "VERIFIED"
+lift = true
+evidence = ["VERIFIED: static initializer; loops zeroing array; returns at 0x0084CA3D (ret)"]
+callees = []
+

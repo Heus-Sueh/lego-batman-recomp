@@ -1,0 +1,4 @@
+interface:
+  display_name: "Native Renderer"
+  short_description: "Manage 5-tier renderer migration and host presentation pacing"
+  default_prompt: "Implement progressive renderer migration across 5 tiers, decouple guest simulation from presentation, and manage host swapchain pacing."

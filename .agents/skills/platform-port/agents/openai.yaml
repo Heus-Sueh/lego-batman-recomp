@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platform Portability"
+  short_description: "Manage host SDL integration and Win32 compatibility boundary"
+  default_prompt: "Implement host platform abstraction using SDL, translate Win32 and DirectX API calls, and maintain multi-platform compatibility."

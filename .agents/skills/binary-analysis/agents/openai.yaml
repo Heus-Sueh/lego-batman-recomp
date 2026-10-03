@@ -1,0 +1,4 @@
+interface:
+  display_name: "Binary Analysis"
+  short_description: "Disassemble PE32 binaries and verify x86-32 calling conventions"
+  default_prompt: "Analyze target PE binaries, perform recursive-descent disassembly, determine function boundaries, and verify x86-32 calling conventions and stack purge counts."

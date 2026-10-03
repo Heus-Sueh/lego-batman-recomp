@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.25)
+project(PCModernRuntime LANGUAGES CXX)
+add_library(pcmodern_core STATIC src/time.cpp src/memory.cpp src/filesystem.cpp src/file.cpp)
+find_package(Threads REQUIRED)
+target_link_libraries(pcmodern_core PUBLIC Threads::Threads)
+add_library(pcmodern::core ALIAS pcmodern_core)
+target_include_directories(pcmodern_core PUBLIC include)
+target_compile_features(pcmodern_core PUBLIC cxx_std_17)

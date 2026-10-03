@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recomp Debug"
+  short_description: "Debug execution frontiers, triage crashes, and resolve ICALLs"
+  default_prompt: "Debug execution frontiers, classify failures using the 3-failure rule, triage stack imbalances, and resolve unlifted indirect calls."

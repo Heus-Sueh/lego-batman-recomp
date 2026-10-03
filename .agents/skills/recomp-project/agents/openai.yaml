@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recomp Project Orchestration"
+  short_description: "Coordinate static recompilation projects across milestone gates"
+  default_prompt: "Coordinate the static recompilation project lifecycle, milestone gates, and routing to specialized skills."

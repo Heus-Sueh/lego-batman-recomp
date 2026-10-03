@@ -1,0 +1,8 @@
+#pragma once
+#include <cstdint>
+namespace lego_revision {
+inline constexpr uint32_t entry = @LEGO_ENTRY@;
+inline constexpr uint32_t image_base = @LEGO_IMAGE_BASE@;
+inline constexpr uint32_t stack_top = @LEGO_STACK_TOP@;
+inline constexpr uint64_t file_size = @LEGO_FILE_SIZE@;
+}

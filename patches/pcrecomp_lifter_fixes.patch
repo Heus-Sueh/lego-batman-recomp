@@ -1,0 +1,523 @@
+From 5cc8d228f2c56595991217d393d05ffcb2af6110 Mon Sep 17 00:00:00 2001
+From: Heus Sueh <heus-sueh@proton.me>
+Date: Sat, 3 Oct 2026 15:26:58 -0300
+Subject: [PATCH] fix(lifter): support repz ret (f3 c3), FPU fnstsw ax, and
+ flag liveness
+
+---
+ runtime/recomp32/recomp_types.h |  52 ++++++++-
+ tools/disasm/disasm32.py        |   2 +-
+ tools/lift/generate.py          |  35 +++++-
+ tools/lift/lift32.py            | 184 ++++++++++++++++++++++----------
+ 4 files changed, 209 insertions(+), 64 deletions(-)
+
+diff --git a/runtime/recomp32/recomp_types.h b/runtime/recomp32/recomp_types.h
+index 482aaca..d2573a6 100644
+--- a/runtime/recomp32/recomp_types.h
++++ b/runtime/recomp32/recomp_types.h
+@@ -11,6 +11,7 @@
+ #define RECOMP_TYPES_H
+ 
+ #include <stdint.h>
++#include <stddef.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <stdio.h>
+@@ -20,6 +21,10 @@
+ #include <intrin.h>
+ #endif
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /* ============================================================
+  * Global Register Model
+  *
+@@ -161,7 +166,7 @@ static inline void MEMSET16(void* dst, uint16_t val, uint32_t count) {
+     MEM32(sp) = _pv; \
+ } while(0)
+ 
+-#define POP32_VAL(sp) ({ \
++#define POP32_VAL(sp) __extension__({ \
+     uint32_t _v = MEM32(sp); \
+     (sp) += 4; \
+     _v; \
+@@ -752,7 +757,38 @@ recomp_func_t recomp_lookup_import(uint32_t va);    /* import bridges */
+     g_cur_func = _caller;  /* the callee RECOMP_ENTER clobbered it */ \
+ } while(0)
+ 
++static inline void recomp_log_unresolved_icall(uint32_t va, uint32_t caller) {
++    static uint32_t s_seen_vas[512];
++    static uint32_t s_seen_cnt = 0;
++    for (uint32_t i = 0; i < s_seen_cnt && i < 512; ++i) {
++        if (s_seen_vas[i] == va) return;
++    }
++    if (s_seen_cnt < 512) {
++        s_seen_vas[s_seen_cnt++] = va;
++    }
++    fprintf(stderr, "ICALL: unresolved VA 0x%08X from 0x%08X\n", va, caller);
++}
++
++static inline void recomp_log_unresolved_itail(uint32_t va, uint32_t caller) {
++    static uint32_t s_seen_vas[512];
++    static uint32_t s_seen_cnt = 0;
++    for (uint32_t i = 0; i < s_seen_cnt && i < 512; ++i) {
++        if (s_seen_vas[i] == va) return;
++    }
++    if (s_seen_cnt < 512) {
++        s_seen_vas[s_seen_cnt++] = va;
++    }
++    fprintf(stderr, "ITAIL: unresolved VA 0x%08X from 0x%08X\n", va, caller);
++}
++
+ /* Indirect call through dispatch */
++#ifdef RECOMP_RUNTIME_DIAGNOSTICS
++void recomp_runtime_unresolved(uint32_t target, uint32_t caller);
++#define RECOMP_UNKNOWN_TARGET(target, caller) recomp_runtime_unresolved(target, caller)
++#else
++#define RECOMP_UNKNOWN_TARGET(target, caller) abort()
++#endif
++
+ #define RECOMP_ICALL(target_va) do { \
+     uint32_t _va = (uint32_t)(target_va); \
+     g_icall_trace[g_icall_trace_idx & (ICALL_TRACE_SIZE-1)] = _va; \
+@@ -767,9 +803,8 @@ recomp_func_t recomp_lookup_import(uint32_t va);    /* import bridges */
+         _fn(); \
+         g_cur_func = _caller;  /* the callee RECOMP_ENTER clobbered it */ \
+     } else { \
+-        fprintf(stderr, "ICALL: unresolved VA 0x%08X from 0x%08X\n", _va, g_cur_func); \
+-        esp += 4; /* pop dummy ret addr */ \
+-        eax = 0; \
++        recomp_log_unresolved_icall(_va, g_cur_func); \
++        RECOMP_UNKNOWN_TARGET(_va, g_cur_func); \
+     } \
+ } while(0)
+ 
+@@ -785,7 +820,10 @@ recomp_func_t recomp_lookup_import(uint32_t va);    /* import bridges */
+     if (_fn) { _fn(); } \
+     else if (_va == RECOMP_RETADDR) { /* setjmp and friends return by jumping \
+         to the saved return address; that is a return, not a missing target. */ } \
+-    else { fprintf(stderr, "ITAIL: unresolved VA 0x%08X from 0x%08X\n", _va, g_cur_func); } \
++    else { \
++        recomp_log_unresolved_itail(_va, g_cur_func); \
++        RECOMP_UNKNOWN_TARGET(_va, g_cur_func); \
++    } \
+ } while(0)
+ 
+ /* ============================================================
+@@ -818,4 +856,8 @@ void recomp_dump_trace(const char* why);
+     if (!_warned) { fprintf(stderr, "STUB: %s called\n", name); _warned = 1; } \
+ } while(0)
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif /* RECOMP_TYPES_H */
+diff --git a/tools/disasm/disasm32.py b/tools/disasm/disasm32.py
+index 312d733..5d697ba 100644
+--- a/tools/disasm/disasm32.py
++++ b/tools/disasm/disasm32.py
+@@ -31,7 +31,7 @@ UNCOND_JUMPS = {'jmp'}
+ CALLS = {'call'}
+ 
+ # Return instructions
+-RETS = {'ret', 'retn', 'retf'}
++RETS = {'ret', 'retn', 'retf', 'repz ret', 'rep ret'}
+ 
+ 
+ @dataclass
+diff --git a/tools/lift/generate.py b/tools/lift/generate.py
+index f32f9ae..7ce47e5 100644
+--- a/tools/lift/generate.py
++++ b/tools/lift/generate.py
+@@ -48,7 +48,7 @@ class LinearInstruction:
+         self.bytes = bytes(insn.bytes)
+         self.operands = list(insn.operands) if insn.operands else []
+         self.is_call = insn.mnemonic == 'call'
+-        self.is_ret = insn.mnemonic in ('ret', 'retn', 'retf')
++        self.is_ret = insn.mnemonic in ('ret', 'retn', 'retf', 'repz ret', 'rep ret')
+         self.is_cond_jump = insn.mnemonic in COND_JUMPS
+         self.is_uncond_jump = insn.mnemonic == 'jmp'
+         self.is_jump = self.is_cond_jump or self.is_uncond_jump
+@@ -169,10 +169,12 @@ def lift_function_linear(lifter, name, instructions, leaders, func_start):
+     has_indirect = any(i.is_uncond_jump and i.get_branch_target() is None
+                        for i in instructions)
+ 
+-    for insn in instructions:
++    flag_needed = lift32.analyze_flag_liveness(instructions, leaders)
++
++    for idx, insn in enumerate(instructions):
+         if has_indirect or insn.address in leaders:
+             lines.append(f'L_{insn.address:08X}:')
+-        for line in lifter.lift_instruction(insn):
++        for line in lifter.lift_instruction(insn, flags_needed=flag_needed[idx]):
+             lines.append(f'    {line}')
+ 
+     # Ensure function doesn't fall off the end without return
+@@ -207,6 +209,33 @@ def lift_function_linear(lifter, name, instructions, leaders, func_start):
+     for lbl in sorted(refed - set(defined)):
+         lines.append(f'    {lbl}: RECOMP_ITAIL(0x{int(lbl[2:], 16):08X}u); return;')
+ 
++    is_leaf = not any(
++        ('RECOMP_CALL' in l or 'RECOMP_ICALL' in l or 'RECOMP_ITAIL' in l)
++        for l in lines
++    )
++    if is_leaf:
++        prologue = [
++            '    /* Leaf function: register promotion to host local variables */',
++            '    uint32_t g_eax = ::g_eax, g_ecx = ::g_ecx, g_edx = ::g_edx, g_ebx = ::g_ebx;',
++            '    uint32_t g_esi = ::g_esi, g_edi = ::g_edi, g_ebp = ::g_ebp, g_esp = ::g_esp;',
++        ]
++        enter_idx = 0
++        for idx, l in enumerate(lines):
++            if 'RECOMP_ENTER(' in l:
++                enter_idx = idx + 1
++                break
++        for p in reversed(prologue):
++            lines.insert(enter_idx, p)
++
++        for idx in range(enter_idx + len(prologue), len(lines)):
++            if 'return;' in lines[idx] and not lines[idx].strip().startswith('/*'):
++                lines[idx] = lines[idx].replace('return;', 'goto _leaf_epilogue;')
++
++        lines.append('  _leaf_epilogue:')
++        lines.append('    ::g_eax = g_eax; ::g_ecx = g_ecx; ::g_edx = g_edx; ::g_ebx = g_ebx;')
++        lines.append('    ::g_esi = g_esi; ::g_edi = g_edi; ::g_ebp = g_ebp; ::g_esp = g_esp;')
++        lines.append('    return;')
++
+     lines.append('}')
+     out = '\n'.join(lines)
+     return re.sub(r'CMP_(\w+)\(_fpu_cmp\)',
+diff --git a/tools/lift/lift32.py b/tools/lift/lift32.py
+index c00ef82..65f15ed 100644
+--- a/tools/lift/lift32.py
++++ b/tools/lift/lift32.py
+@@ -134,6 +134,56 @@ SETCC_MAP = {f'set{k[1:]}': v for k, v in COND_MAP.items()}
+ # CMOVcc follows same pattern
+ CMOVCC_MAP = {f'cmov{k[1:]}': v for k, v in COND_MAP.items()}
+ 
++# Flag analysis constants for Dead Flag Elimination (DFE)
++FLAG_CONSUMERS = set(COND_CODE.keys()) | set(SETCC_MAP.keys()) | set(CMOVCC_MAP.keys()) | {
++    'je', 'jne', 'jz', 'jnz', 'ja', 'jae', 'jb', 'jbe',
++    'jg', 'jge', 'jl', 'jle', 'js', 'jns', 'jo', 'jno',
++    'jp', 'jnp', 'jcxz', 'jecxz',
++    'adc', 'sbb', 'pushf', 'pushfd', 'lahf',
++}
++
++FLAG_FULL_CLOBBERS = {
++    'cmp', 'test', 'and', 'or', 'xor', 'add', 'sub', 'neg',
++    'popf', 'popfd', 'sahf',
++}
++
++FLAG_SETTERS = {
++    'add', 'sub', 'inc', 'dec', 'neg', 'and', 'or', 'xor',
++    'shl', 'sal', 'shr', 'sar', 'rol', 'ror', 'cmp', 'test', 'bt',
++}
++
++
++def analyze_flag_liveness(instructions, leaders: set = None) -> list[bool]:
++    """Compute whether each instruction's flag outputs are needed.
++    Returns a list of bools corresponding 1:1 with instructions."""
++    leaders = leaders or set()
++    n = len(instructions)
++    needed = [True] * n
++    for i, insn in enumerate(instructions):
++        if insn.mnemonic not in FLAG_SETTERS:
++            continue
++        is_needed = True
++        for j in range(i + 1, n):
++            nxt = instructions[j]
++            # Stop if entering a new basic block / merge point
++            if nxt.address in leaders:
++                is_needed = True
++                break
++            # Check if flags are read
++            if nxt.mnemonic in FLAG_CONSUMERS:
++                is_needed = True
++                break
++            # Check if flags are unconditionally overwritten or discarded at exit
++            if nxt.mnemonic in FLAG_FULL_CLOBBERS or nxt.is_ret or nxt.mnemonic == 'int3':
++                is_needed = False
++                break
++            # Stop at branch instructions
++            if getattr(nxt, 'is_uncond_jump', False) or getattr(nxt, 'is_cond_jump', False):
++                is_needed = True
++                break
++        needed[i] = is_needed
++    return needed
++
+ 
+ def reg_name(reg_id: int) -> str:
+     """Get the C variable name for a Capstone register ID."""
+@@ -481,6 +531,8 @@ class Lifter:
+         bits nobody branches on. If a program ever needs real narrow-operand PF,
+         that is when the tuple grows a width.
+         """
++        if not getattr(self, '_flags_needed', True):
++            return None
+         self._flag_seq += 1
+         if width >= 32:
+             return f"_flag_a = (uint32_t)({a}); _flag_b = (uint32_t)({b});"
+@@ -589,11 +641,12 @@ class Lifter:
+         else:
+             return f"/* flag from {setter} */ {cmp_macro}({ops})"
+ 
+-    def lift_instruction(self, insn) -> list:
++    def lift_instruction(self, insn, flags_needed: bool = True) -> list:
+         """Lift one instruction, recording the runtime flag kind if it wrote flags."""
++        self._flags_needed = flags_needed
+         seq0 = self._flag_seq
+         lines = self._lift_instruction(insn)
+-        if self._flag_seq != seq0 and self._flag_state is not None:
++        if flags_needed and self._flag_seq != seq0 and self._flag_state is not None:
+             lines.append(f"_flag_k = {FLAG_KIND.get(self._flag_state[0], 'FK_CMP')};")
+         return lines
+ 
+@@ -708,47 +761,54 @@ class Lifter:
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+-                lines.append(self._flag_capture(a, b, op_bits(ops[0])))
++                cap = self._flag_capture(a, b, op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} + {b}')}; {comment}")
+-                self._flag_state = ('add', "_flag_a, _flag_b")
++                if cap:
++                    self._flag_state = ('add', "_flag_a, _flag_b")
+ 
+         elif m == 'sub':
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+-                lines.append(self._flag_capture(a, b, op_bits(ops[0])))
++                cap = self._flag_capture(a, b, op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} - {b}')}; {comment}")
+-                self._flag_state = ('sub', "_flag_a, _flag_b")
++                if cap:
++                    self._flag_state = ('sub', "_flag_a, _flag_b")
+ 
+         elif m == 'inc':
+             if len(ops) == 1:
+                 a = self._fmt_read(ops[0])
+-                lines.append(self._flag_capture(a, "1", op_bits(ops[0])))
++                cap = self._flag_capture(a, "1", op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} + 1')}; {comment}")
+-                self._flag_state = ('inc', "_flag_a, _flag_b")
++                if cap:
++                    self._flag_state = ('inc', "_flag_a, _flag_b")
+ 
+         elif m == 'dec':
+             if len(ops) == 1:
+                 a = self._fmt_read(ops[0])
+-                lines.append(self._flag_capture(a, "1", op_bits(ops[0])))
++                cap = self._flag_capture(a, "1", op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} - 1')}; {comment}")
+-                self._flag_state = ('dec', "_flag_a, _flag_b")
++                if cap:
++                    self._flag_state = ('dec', "_flag_a, _flag_b")
+ 
+         elif m == 'neg':
+             if len(ops) == 1:
+                 a = self._fmt_read(ops[0])
+-                lines.append(self._flag_capture("0", a, op_bits(ops[0])))
+-                # NEG sets CF = (operand != 0), and MSVC leans on it for a
+-                # branchless null check:
+-                #     neg ecx / sbb ecx, ecx / and ecx, esi / add ecx, 8
+-                # i.e. `ecx = (ecx ? esi : 0) + 8`. Without this, sbb reads a
+-                # stale _cf, the select always yields 0, and the callee gets 8
+-                # as its `this` -- which is how it presents: a __thiscall
+-                # method dereferencing address 8. Unlike the cmp/sbb case
+-                # below, NEG's carry is unambiguous and purely local.
+-                lines.append(f"_cf = ({a}) != 0;")
++                cap = self._flag_capture("0", a, op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
++                    lines.append(f"_cf = ({a}) != 0;")
+                 lines.append(f"{self._fmt_write(ops[0], f'(uint32_t)(-(int32_t){a})')}; {comment}")
+-                self._flag_state = ('sub', "_flag_a, _flag_b")
++                if cap:
++                    self._flag_state = ('sub', "_flag_a, _flag_b")
+ 
+         elif m == 'not':
+             if len(ops) == 1:
+@@ -799,48 +859,55 @@ class Lifter:
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+-                lines.append(self._flag_capture(a, b, op_bits(ops[0])))
++                cap = self._flag_capture(a, b, op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} & {b}')}; {comment}")
+-                lines.append("_cf = 0;")
+-                self._flag_state = ('and', "_flag_a, _flag_b")
++                if cap:
++                    lines.append("_cf = 0;")
++                    self._flag_state = ('and', "_flag_a, _flag_b")
+ 
+         elif m == 'or':
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+-                lines.append(self._flag_capture(f"({a} | {b})", f"({a} | {b})", op_bits(ops[0])))
++                cap = self._flag_capture(f"({a} | {b})", f"({a} | {b})", op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} | {b}')}; {comment}")
+-                lines.append("_cf = 0;")
+-                self._flag_state = ('or', "_flag_a, _flag_b")
++                if cap:
++                    lines.append("_cf = 0;")
++                    self._flag_state = ('or', "_flag_a, _flag_b")
+ 
+         elif m == 'xor':
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+                 # Detect xor reg, reg (zero idiom)
+-                carry = '_cf'
+                 if ops[0].type == X86_OP_REG and ops[1].type == X86_OP_REG and ops[0].reg == ops[1].reg:
+-                    lines.append(self._flag_capture("0", "0", op_bits(ops[0])))
++                    cap = self._flag_capture("0", "0", op_bits(ops[0]))
++                    if cap:
++                        lines.append(cap)
+                     lines.append(f"{self._fmt_write(ops[0], '0')}; {comment}")
+                 else:
+-                    lines.append(self._flag_capture(f"({a} ^ {b})", f"({a} ^ {b})", op_bits(ops[0])))
++                    cap = self._flag_capture(f"({a} ^ {b})", f"({a} ^ {b})", op_bits(ops[0]))
++                    if cap:
++                        lines.append(cap)
+                     lines.append(f"{self._fmt_write(ops[0], f'{a} ^ {b}')}; {comment}")
+-                lines.append("_cf = 0;")
+-                self._flag_state = ('xor', "_flag_a, _flag_b")
++                if cap:
++                    lines.append("_cf = 0;")
++                    self._flag_state = ('xor', "_flag_a, _flag_b")
+ 
+         # --- Shifts ---
+-        # shl/shr/sar set ZF/SF/PF from the result (when the count != 0). Capture
+-        # the result so a following jcc tests it -- otherwise it reads the prior
+-        # instruction's stale flags (e.g. `shr ecx,2; je` wrongly using a dec's ZF,
+-        # which sent the Watcom memset's count off into a multi-GB overrun).
+         elif m == 'shl' or m == 'sal':
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b, bn = self._shift_count(ops[1])
+                 res = f"({a} << {b})"
+                 w = op_bits(ops[0])
+-                lines.append(f"if ({b}) _cf = {self._shift_out_cf(a, b, bn, w, 'left')}; {comment}")
+-                lines.append(self._shift_flags(res, b, w))
++                if getattr(self, '_flags_needed', True):
++                    lines.append(f"if ({b}) _cf = {self._shift_out_cf(a, b, bn, w, 'left')}; {comment}")
++                    lines.append(self._shift_flags(res, b, w))
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} << {b}')}; {comment}")
+                 self._flag_state = None
+ 
+@@ -850,8 +917,9 @@ class Lifter:
+                 b, bn = self._shift_count(ops[1])
+                 w = op_bits(ops[0])
+                 res = f"({a} >> {b})"
+-                lines.append(f"if ({b}) _cf = {self._shift_out_cf(a, b, bn, w, 'right')}; {comment}")
+-                lines.append(self._shift_flags(res, b, w))
++                if getattr(self, '_flags_needed', True):
++                    lines.append(f"if ({b}) _cf = {self._shift_out_cf(a, b, bn, w, 'right')}; {comment}")
++                    lines.append(self._shift_flags(res, b, w))
+                 lines.append(f"{self._fmt_write(ops[0], f'{a} >> {b}')}; {comment}")
+                 self._flag_state = None
+ 
+@@ -861,9 +929,9 @@ class Lifter:
+                 b, bn = self._shift_count(ops[1])
+                 w = op_bits(ops[0])
+                 res = f"((uint32_t)((int32_t){a} >> {b}))"
+-                # sar must publish CF for a following rcr (the clip's `sar;rcr` lerp).
+-                lines.append(f"if ({b}) _cf = {self._shift_out_cf(a, b, bn, w, 'arith')}; {comment}")
+-                lines.append(self._shift_flags(res, b, w))
++                if getattr(self, '_flags_needed', True):
++                    lines.append(f"if ({b}) _cf = {self._shift_out_cf(a, b, bn, w, 'arith')}; {comment}")
++                    lines.append(self._shift_flags(res, b, w))
+                 lines.append(f"{self._fmt_write(ops[0], f'(uint32_t)((int32_t){a} >> {b})')};")
+                 self._flag_state = None
+ 
+@@ -967,26 +1035,31 @@ class Lifter:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+                 lines.append(f"/* cmp {a}, {b} */ {comment}")
+-                lines.append(self._flag_capture(a, b, op_bits(ops[0])))
+-                self._flag_state = ('cmp', "_flag_a, _flag_b")
+-            self._flag_seq += 1
++                cap = self._flag_capture(a, b, op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
++                    self._flag_state = ('cmp', "_flag_a, _flag_b")
+ 
+         elif m == 'test':
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+                 lines.append(f"/* test {a}, {b} */ {comment}")
+-                lines.append(self._flag_capture(a, b, op_bits(ops[0])))
+-                lines.append("_cf = 0;")
+-                self._flag_state = ('test', "_flag_a, _flag_b")
++                cap = self._flag_capture(a, b, op_bits(ops[0]))
++                if cap:
++                    lines.append(cap)
++                    lines.append("_cf = 0;")
++                    self._flag_state = ('test', "_flag_a, _flag_b")
+ 
+         elif m == 'bt':
+             if len(ops) == 2:
+                 a = self._fmt_read(ops[0])
+                 b = self._fmt_read(ops[1])
+                 lines.append(f"/* bt {a}, {b} */ {comment}")
+-                lines.append(self._flag_capture(a, b))
+-                self._flag_state = ('bt', "_flag_a, _flag_b")
++                cap = self._flag_capture(a, b)
++                if cap:
++                    lines.append(cap)
++                    self._flag_state = ('bt', "_flag_a, _flag_b")
+ 
+         # --- Setcc ---
+         elif m in SETCC_MAP:
+@@ -1167,7 +1240,7 @@ class Lifter:
+                 else:
+                     lines.append(f"RECOMP_ICALL(0); /* unresolved */ {comment}")
+ 
+-        elif m == 'ret' or m == 'retn':
++        elif m in ('ret', 'retn', 'repz ret', 'rep ret'):
+             # Pop the return address that RECOMP_CALL/ICALL pushed (esp += 4), plus
+             # any stdcall callee-cleanup bytes (ret N -> esp += 4 + N). Without the
+             # +4 the simulated ESP drifts down 4 bytes per call and eventually the
+@@ -1396,7 +1469,7 @@ class Lifter:
+             self._flag_seq += 1
+ 
+         elif m == 'fnstsw' or m == 'fstsw':
+-            lines.append(f"/* fnstsw - FPU status to ax */ {comment}")
++            lines.append(f"{{ uint16_t _sw = 0; if (_fpu_cmp < 0) _sw |= 0x0100; else if (_fpu_cmp == 0) _sw |= 0x4000; eax = (eax & 0xFFFF0000u) | _sw; }} {comment}")
+             # After fcom+fnstsw, the test ah pattern follows
+ 
+         elif m == 'sahf':
+@@ -1671,9 +1744,10 @@ class Lifter:
+         lines = []
+         lines.append(f"L_{block.start:08X}:")
+ 
++        flag_needed = analyze_flag_liveness(block.instructions, set())
+         emitted = 0
+-        for insn in block.instructions:
+-            lifted = self.lift_instruction(insn)
++        for idx, insn in enumerate(block.instructions):
++            lifted = self.lift_instruction(insn, flags_needed=flag_needed[idx])
+             for line in lifted:
+                 lines.append(f"    {line}")
+                 if not line.lstrip().startswith('/*'):
+-- 
+2.55.0
+

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recomp Validation"
+  short_description: "Enforce 7-level validation ladder and evidence rules"
+  default_prompt: "Validate static recompilation progress against the 7-level validation ladder, enforce evidence levels, and maintain regression tests."

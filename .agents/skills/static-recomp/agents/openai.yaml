@@ -1,0 +1,4 @@
+interface:
+  display_name: "Static Recomp"
+  short_description: "Lift x86 code to C/C++, recover jump tables, and manage codegen"
+  default_prompt: "Lift x86 instructions to C/C++, reconstruct control flow graphs, recover switch tables, and manage generated code boundaries."

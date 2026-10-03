@@ -1,0 +1,81 @@
+# LEGO Batman: The Videogame - Executable Revision Manifest
+# Revision: lego_batman (GOG / DRM-Free Clean v1.0)
+
+[executable]
+name = "LEGOBatman.exe"
+title = "LEGO Batman: The Videogame"
+release = "v1.0 (Clean/GOG)"
+file_size = 7557120
+format = "PE32 (i386)"
+subsystem = "Windows GUI"
+linker_version = "8.00"
+image_base = "0x00400000"
+entry_point_rva = "0x0033D6A3"
+entry_point_va = "0x0073D6A3"
+winmain_rva = "0x00127F60"
+winmain_va = "0x00527F60"
+
+[drm]
+system = "None (Clean DRM-free)"
+protected = false
+
+[host_bootstrap]
+# Host guest-stack allocation policy, not an original game global.
+stack_top = "0x00300000"
+
+[[sections]]
+name = ".text"
+rva = "0x00001000"
+virtual_size = "0x0044E19E"
+raw_offset = "0x00001000"
+raw_size = "0x0044F000"
+flags = ["CODE", "EXEC", "READ"]
+notes = "Original game code section (clean x86-32 instructions, MSVC 2005)"
+
+[[sections]]
+name = ".rdata"
+rva = "0x00450000"
+virtual_size = "0x000E2A5E"
+raw_offset = "0x00450000"
+raw_size = "0x000E3000"
+flags = ["IDATA", "READ"]
+
+[[sections]]
+name = ".data"
+rva = "0x00533000"
+virtual_size = "0x020E2490"
+raw_offset = "0x00533000"
+raw_size = "0x0008A000"
+flags = ["IDATA", "READ", "WRITE"]
+
+[[sections]]
+name = ".idata"
+rva = "0x02616000"
+virtual_size = "0x0000207E"
+raw_offset = "0x005BD000"
+raw_size = "0x00003000"
+flags = ["IDATA", "READ", "WRITE"]
+
+[[sections]]
+name = ".shr"
+rva = "0x02619000"
+virtual_size = "0x00000104"
+raw_offset = "0x005C0000"
+raw_size = "0x00001000"
+flags = ["IDATA", "READ", "WRITE"]
+
+[[sections]]
+name = "CONST"
+rva = "0x0261A000"
+virtual_size = "0x0000014B"
+raw_offset = "0x005C1000"
+raw_size = "0x00001000"
+flags = ["IDATA", "READ", "WRITE"]
+
+[[sections]]
+name = ".rsrc"
+rva = "0x0261B000"
+virtual_size = "0x00172E6C"
+raw_offset = "0x005C2000"
+raw_size = "0x00173000"
+flags = ["IDATA", "READ"]

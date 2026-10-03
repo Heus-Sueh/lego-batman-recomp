@@ -1,0 +1,14 @@
+# Project target manifest. Revision-specific PE data belongs in config/revisions/.
+[target]
+id = "lego_batman"
+title = "LEGO Batman: The Videogame"
+output_name = "legobatman"
+guest_executable = "LEGOBatman.exe"
+default_game_dir = "game"
+active_revision = "config/revisions/lego_batman"
+adapter = "lego_batman"
+
+[runtime]
+simulation_fps = 30
+default_width = 800
+default_height = 600

@@ -1,0 +1,58 @@
+# LEGO Batman: The Videogame - Executable Memory Layout & Globals
+# Revision: lego_batman (Clean/GOG v1.0)
+
+[layout]
+image_base = 0x00400000
+address_space_size = 0x80000000  # 2 GB 32-bit guest address space
+
+[[regions]]
+name = ".text"
+start = 0x00401000
+end = 0x0084F19E
+size = 0x0044E19E
+permissions = "RX"
+type = "code"
+description = "Original game executable code section"
+
+[[regions]]
+name = ".rdata"
+start = 0x00850000
+end = 0x00932A5E
+size = 0x000E2A5E
+permissions = "R"
+type = "rodata"
+description = "Read-only strings, constants, and vtables"
+
+[[regions]]
+name = ".data"
+start = 0x00933000
+end = 0x02A15490
+size = 0x020E2490
+permissions = "RW"
+type = "data"
+description = "Initialized and uninitialized global variables"
+
+[[regions]]
+name = ".idata"
+start = 0x02A16000
+end = 0x02A1807E
+size = 0x0000207E
+permissions = "RW"
+type = "idata"
+description = "Import Address Table and descriptors"
+
+[[regions]]
+name = ".shr"
+start = 0x02A19000
+end = 0x02A19104
+size = 0x00000104
+permissions = "RW"
+type = "data"
+
+[[regions]]
+name = "CONST"
+start = 0x02A1A000
+end = 0x02A1A14B
+size = 0x0000014B
+permissions = "RW"
+type = "data"

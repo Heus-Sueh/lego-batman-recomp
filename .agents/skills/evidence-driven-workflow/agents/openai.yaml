@@ -1,0 +1,14 @@
+interface:
+  display_name: Evidence-Driven Workflow
+  short_description: Evidence, gates, validation, and knowledge capture
+  default_prompt: Use $evidence-driven-workflow to investigate, plan, execute, validate,
+    and document this task.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

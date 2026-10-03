@@ -1,0 +1,52 @@
+# User-supplied game executables, assets, and audio dumps (strictly proprietary)
+/game/
+
+# Generated code from pcrecomp lifter (recompilation output)
+/generated/
+
+# Build artifacts
+/build/
+/out/
+/bin/
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+.ninja_*
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary analysis dumps and logs
+logs/
+*.log
+/pe_analysis.json
+/functions.json
+work/
+scratch/
+
+# IDE and editor settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
