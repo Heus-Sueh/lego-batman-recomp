@@ -80,7 +80,7 @@ if(NOT PCRECOMP_BUILD_GAME)
 endif()
 
 recomp_target_value(adapter RECOMP_TARGET_ADAPTER)
-if(NOT RECOMP_TARGET_ADAPTER MATCHES "^(legacy_pc|lego_batman)$")
+if(NOT RECOMP_TARGET_ADAPTER MATCHES "^(lego_batman)$")
     message(FATAL_ERROR "Unsupported target adapter: ${RECOMP_TARGET_ADAPTER}")
 endif()
 include(src/adapters/${RECOMP_TARGET_ADAPTER}/adapter.cmake)
@@ -96,9 +96,6 @@ endif()
 # Main executable
 add_executable(${RECOMP_TARGET_OUTPUT_NAME} ${RECOMP_SOURCES})
 target_compile_definitions(${RECOMP_TARGET_OUTPUT_NAME} PRIVATE RECOMP_RUNTIME_DIAGNOSTICS)
-if(RECOMP_TARGET_ADAPTER STREQUAL "legacy_pc")
-    target_compile_definitions(${RECOMP_TARGET_OUTPUT_NAME} PRIVATE RECOMP_LEGACY_GAME_HOOKS)
-endif()
 
 target_include_directories(${RECOMP_TARGET_OUTPUT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src

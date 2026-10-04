@@ -68,11 +68,7 @@ See:
 
 Encrypted or protected executables cannot automatically be treated as ordinary linearly disassemblable images on disk.
 
-Disassembly and lifting require a compatible clean executable or decrypted memory image matching the selected revision. Verify binary identity before applying addresses or patches. The linked GTA DRM notes are historical title-specific guidance.
-
-See:
-
-[docs/gotchas/drm-crack-trampolines.md](docs/gotchas/drm-crack-trampolines.md)
+Disassembly and lifting require a compatible clean executable or decrypted memory image matching the selected revision. Verify binary identity before applying addresses or patches. Historical GTA DRM notes were removed from the active tree; consult Git history only as title-specific background.
 
 ### 2.4 Generated Code Ownership
 
@@ -230,8 +226,8 @@ default manifest. Generated sources share one output directory. Do not claim
 multi-game support until selection, revision validation and output isolation
 have been verified together.
 
-The default integration adapter is `lego_batman`; `legacy_pc` is a historical
-comparison profile. See `docs/architecture/target-adapters.md`. Never enable
+The only supported integration adapter is `lego_batman`; `legacy_pc` was removed.
+See `docs/architecture/target-adapters.md`. Never enable
 `RECOMP_LEGACY_GAME_HOOKS` for LEGO Batman. Legacy menu/raster/splash tests are
 not capabilities of this title. PE header checks do not establish full binary
 identity, and existing generated purge bridges do not prove original behavior.
@@ -389,9 +385,9 @@ Consult targeted documentation before modifying the corresponding subsystem.
 
 ### Architecture
 
-RenderWare:
+Runtime libraries:
 
-[docs/architecture/renderware-subsystems.md](docs/architecture/renderware-subsystems.md)
+[libpcrecomp](libpcrecomp/README.md), [pcmodern](pcmodern/README.md), [win32compat](win32compat/README.md)
 
 Win32 compatibility:
 
@@ -408,10 +404,6 @@ Recurring resolution patterns:
 Stack and ABI:
 
 [docs/gotchas/stack-balance-and-abi.md](docs/gotchas/stack-balance-and-abi.md)
-
-DRM and crack trampolines:
-
-[docs/gotchas/drm-crack-trampolines.md](docs/gotchas/drm-crack-trampolines.md)
 
 Guest simulation pacing:
 

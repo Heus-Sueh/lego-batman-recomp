@@ -7,11 +7,6 @@ from .dispatch_gen import (
     generate_recomp_funcs_h,
     generate_recomp_dispatch_cpp,
 )
-from .runtime_gen import (
-    generate_crt_cpp,
-    generate_winmain_cpp,
-    generate_rw_cpp,
-)
 from .game_lifter import generate_game_cpp
 
 __all__ = [
@@ -23,8 +18,5 @@ __all__ = [
     "generate_recomp_globals_cpp",
     "generate_recomp_funcs_h",
     "generate_recomp_dispatch_cpp",
-    "generate_crt_cpp",
-    "generate_winmain_cpp",
-    "generate_rw_cpp",
     "generate_game_cpp",
 ]

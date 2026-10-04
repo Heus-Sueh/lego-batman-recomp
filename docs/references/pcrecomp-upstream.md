@@ -4,6 +4,9 @@
 
 ## Overview
 
+For the selective heap-boundary adaptation from the newer upstream runtime,
+see [win32hle integration](win32hle-integration.md).
+
 The `pcrecomp` toolbox (https://github.com/sp00nznet/pcrecomp) provides the core analysis, disassembly, and instruction-lifting pipeline for this project. It is integrated as a git submodule in `thirdparty/pcrecomp/`.
 
 ## Upstream Pipeline Components

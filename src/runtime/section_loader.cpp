@@ -1,4 +1,5 @@
 #include "section_loader.h"
+#include "guest_heap.h"
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -78,10 +79,17 @@ bool SectionLoader::load_pe_data_sections(const std::filesystem::path& exe_path,
     auto read_le32 = [](const uint8_t* p) {
         return uint32_t(p[0]) | uint32_t(p[1])<<8 | uint32_t(p[2])<<16 | uint32_t(p[3])<<24;
     };
+    if (opt_hdr_buf.size() < 60) return false;
     const uint32_t image_base = read_le32(opt_hdr_buf.data()+28);
     const uint32_t image_size = read_le32(opt_hdr_buf.data()+56);
     const uint64_t entry_point = uint64_t(image_base)+read_le32(opt_hdr_buf.data()+16);
     if (entry_point > UINT32_MAX || !memory.is_valid(image_base,image_size)) return false;
+    // Current host arena policy reserves all addresses >= guest_heap_begin.
+    // Reject alternate images that collide instead of silently corrupting them.
+    if (uint64_t(image_base) + image_size > guest_heap_begin) {
+        std::cerr << "[SectionLoader] PE image overlaps reserved runtime arenas.\n";
+        return false;
+    }
 
     // Map DOS and PE headers into guest memory at image_base (so CRT header checks succeed)
     file.seekg(0);

@@ -1,5 +1,4 @@
-# Transitional bridge implementation shared by legacy and LEGO Batman launchers.
-# RW/asset sources remain link dependencies of generated compatibility bodies.
+# Core project platform and runtime dependencies
 find_package(SDL3 QUIET)
 if(NOT SDL3_FOUND)
     find_package(PkgConfig REQUIRED)
@@ -11,6 +10,7 @@ endif()
 set(RECOMP_ADAPTER_SOURCES
     src/runtime/bridge_adapter.cpp
     src/runtime/guest_memory.cpp
+    src/runtime/guest_heap.cpp
     src/runtime/section_loader.cpp
     src/runtime/dispatch.cpp
     src/runtime/diagnostics.cpp
@@ -25,11 +25,6 @@ set(RECOMP_ADAPTER_SOURCES
     src/win32/win32_d3d9.cpp
     src/win32/import_resolver.cpp
     src/renderer/renderer.cpp
-    src/rw/rw_core.cpp
-    src/assets/img_archive.cpp
-    src/assets/txd_loader.cpp
-    src/assets/gxt_loader.cpp
-    src/assets/dff_loader.cpp
 )
 
 

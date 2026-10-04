@@ -52,9 +52,6 @@ public:
 
     template <typename T>
     void write(GuestAddress addr, const T& value) const noexcept {
-        if (addr == 0x00C17050) {
-            std::cout << "[GuestMemory] Write to 0x00C17050 (RsGlobal.quit) = " << value << "\n";
-        }
         if (auto* ptr = is_valid(addr,sizeof(T)) ? translate(addr) : nullptr) {
             std::memcpy(ptr, &value, sizeof(T));
         }
@@ -77,7 +74,9 @@ public:
 
     [[nodiscard]] bool is_valid(GuestAddress addr, size_t size = 1) const noexcept;
 
-    // Dynamic guest heap allocator (managed within 2GB guest space, default starting at 0x02000000)
+    // Compatibility allocations use a separate arena above the Win32 heap.
+    static constexpr GuestAddress allocation_begin = 0x20000000;
+    static constexpr GuestAddress allocation_end = 0x30000000;
     GuestAddress guest_alloc(size_t size);
     void guest_free(GuestAddress addr);
 
@@ -88,7 +87,7 @@ private:
     uint8_t*     m_base_ptr{nullptr};
     size_t       m_allocated_size{0};
     bool         m_fixed_base{false};
-    GuestAddress m_heap_break{0x02000000};
+    GuestAddress m_heap_break{allocation_begin};
 };
 
 inline void* guest_to_host(GuestAddress addr) noexcept {

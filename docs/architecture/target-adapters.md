@@ -1,5 +1,19 @@
 # Build-selected target adapters
 
+## Current status — 2026-10-04
+
+Only `lego_batman` is accepted by CMake. The legacy adapter, RW/asset sources and
+unused legacy generator bodies have been removed. The common source manifest
+links the runtime/platform boundary plus the three extracted libraries described
+in their READMEs. `RECOMP_LEGACY_GAME_HOOKS` is not enabled by any supported build.
+Automatic purge-only fallbacks remain disabled for LEGO Batman.
+
+See the root README for current frontier/test counts. All sections below are
+**historical extraction records**, not descriptions of available adapters,
+dependencies or current validation. `legacy_pc` is no longer selectable.
+
+## Historical extraction — 2026-10-03
+
 Current execution supersedes the earlier baseline below: LEGO Batman generation
 now disables automatic purge-only guest bridges and exposes missing CRT code.
 See [strict CRT frontier](../investigations/0016-lego-strict-crt-frontier.md).

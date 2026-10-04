@@ -1,4 +1,4 @@
-# Shared legacy bridge dependencies remain until codegen removes unused RW bodies.
+# Core platform and runtime bridge dependencies
 include(${PROJECT_SOURCE_DIR}/src/adapters/common/bridge_dependencies.cmake)
 list(APPEND RECOMP_ADAPTER_SOURCES src/adapters/lego_batman/application.cpp)
 

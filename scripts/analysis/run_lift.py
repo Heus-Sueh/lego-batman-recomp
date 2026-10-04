@@ -16,9 +16,6 @@ from lifter import (
     generate_recomp_globals_cpp,
     generate_recomp_funcs_h,
     generate_recomp_dispatch_cpp,
-    generate_crt_cpp,
-    generate_winmain_cpp,
-    generate_rw_cpp,
     generate_game_cpp,
 )
 
@@ -110,7 +107,7 @@ def main():
     generate_recomp_dispatch_cpp(out_dir, functions, auto_bridges=auto_bridges, exe_path=exe_path)
 
     print("[*] Generating function implementation units...")
-    generate_game_cpp(out_dir, exe_path=exe_path, functions=functions)
+    generate_game_cpp(out_dir, exe_path=exe_path, functions=functions, target=target)
 
     print("[+] Code generation complete. All files written to", out_dir)
 

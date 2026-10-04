@@ -1,5 +1,10 @@
 # Documentation review — 2026-09-19
 
+Historical review of the pre-LEGO integration. The 2026-10-04 cleanup removes
+the GTA investigation series 0001–0015 and the RenderWare/DRM documents from the
+active tree; they remain recoverable from Git history. Retention decisions and
+execution numbers below describe that earlier review, not the current project.
+
 ## Evidence and scope
 
 VERIFIED: `just frontier` currently exits cleanly at one bounded presentation,

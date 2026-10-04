@@ -1,4 +1,5 @@
 #include "guest_memory.h"
+#include "guest_heap.h"
 #include "bridge_adapter.h"
 #include <pcrecomp/memory.h>
 #include <pcmodern/memory.h>
@@ -44,6 +45,8 @@ bool GuestMemory::initialize() {
 }
 
 void GuestMemory::shutdown() {
+    reset_guest_heap();
+    m_heap_break = allocation_begin;
     if (!m_base_ptr) return;
 
     g_mem_base = 0;
@@ -65,10 +68,13 @@ GuestAddress GuestMemory::guest_alloc(size_t size) {
     if (!m_base_ptr || size == 0) {
         return 0;
     }
+    // Check before alignment to reject overflow and keep allocations in the arena.
+    if (m_heap_break >= allocation_end || size > allocation_end - m_heap_break)
+        return 0;
     // 8-byte alignment
     size = (size + 7) & ~static_cast<size_t>(7);
     GuestAddress alloc_addr = m_heap_break;
-    if (static_cast<uint64_t>(alloc_addr) + size >= m_allocated_size) {
+    if (static_cast<uint64_t>(alloc_addr) + size > allocation_end) {
         std::cerr << "[GuestMemory] Out of guest memory on allocation of " << size << " bytes.\n";
         return 0;
     }

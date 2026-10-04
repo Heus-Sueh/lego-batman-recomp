@@ -32,14 +32,14 @@ PcRuntime* bridge_runtime() {
     return runtime.get();
 }
 }
-extern "C" void gta_call_time_import(uint32_t id) {
+extern "C" void recomp_call_time_import(uint32_t id) {
     PcContext context{g_eax,g_ecx,g_edx,g_ebx,g_esp,g_ebp,g_esi,g_edi,0};
     auto status=pc_call_import(pcrecomp::runtime::bridge_runtime(),id,&context,g_cur_func);
     if (status != PC_OK) throw std::runtime_error("Time import bridge failed");
     g_eax=context.eax; g_esp=context.esp;
 }
 
-extern "C" void gta_call_fs_import(uint32_t id) {
+extern "C" void recomp_call_fs_import(uint32_t id) {
     PcContext context{g_eax,g_ecx,g_edx,g_ebx,g_esp,g_ebp,g_esi,g_edi,0};
     auto status=pc_call_import(pcrecomp::runtime::bridge_runtime(),id,&context,g_cur_func);
     if (status != PC_OK) throw std::runtime_error("FS import bridge failed");

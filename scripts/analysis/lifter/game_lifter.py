@@ -19,11 +19,16 @@ from lift32 import Lifter
 from generate import LinearInstruction, linear_disassemble_function, lift_function_linear
 from .common import HEADER_COMMENT, write_if_changed, get_shared_cs, Cs
 
-def generate_game_cpp(out_dir: Path, exe_path: Path = None, functions: list[dict] = None):
+def generate_game_cpp(out_dir: Path, exe_path: Path = None, functions: list[dict] = None, target: dict = None):
+    prefix = "legobatman"
+    if target:
+        prefix = target.get("output_name") or target.get("id") or "legobatman"
+
     if exe_path is None:
-        p1 = Path("game/gta_sa.exe")
-        p2 = Path("game/GTA San Andreas/gta_sa_unpacked.exe")
-        exe_path = p1 if p1.exists() else p2
+        if target:
+            exe_path = Path(target.get("default_game_dir", "game")) / target.get("guest_executable", "LEGOBatman.exe")
+        else:
+            exe_path = Path("game/LEGOBatman.exe")
 
     if exe_path and exe_path.exists() and Lifter is not None and pefile is not None:
         print(f"[*] Lifting authentic game & menu logic from {exe_path}...")
@@ -208,9 +213,6 @@ def generate_game_cpp(out_dir: Path, exe_path: Path = None, functions: list[dict
 #define RECOMP_GENERATED_CODE
 #include "../../thirdparty/pcrecomp/runtime/recomp32/recomp_types.h"
 #include "recomp_funcs.h"
-#include "../../src/renderer/renderer.h"
-#include "../../src/rw/rw_core.h"
-#include "../../src/assets/txd_loader.h"
 #include <iostream>
 #include <cstring>
 
@@ -357,7 +359,7 @@ extern uint32_t g_frame_counter;
                 batch_lines.append(lifted_code_map[va])
                 batch_lines.append("")
             batch_lines.append("} // extern \"C\"\n")
-            batch_filename = f"gta_sa_game_{batch_idx:03d}.cpp"
+            batch_filename = f"{prefix}_game_{batch_idx:03d}.cpp"
             new_generated_files.add(batch_filename)
             changed = write_if_changed(out_dir / batch_filename, "\n".join(batch_lines))
             status_str = "written" if changed else "up-to-date"
@@ -372,14 +374,14 @@ extern uint32_t g_frame_counter;
             bridges,
             ""
         ]
-        bridges_filename = "gta_sa_game_bridges.cpp"
+        bridges_filename = f"{prefix}_game_bridges.cpp"
         new_generated_files.add(bridges_filename)
         bridges_changed = write_if_changed(out_dir / bridges_filename, "\n".join(bridges_lines))
         status_str = "written" if bridges_changed else "up-to-date"
         print(f"[+] Emitted authentic compatibility bridges -> {out_dir / bridges_filename} ({status_str})")
-        # Remove any stale gta_sa_game_*.cpp that is not in new_generated_files
-        for old_file in out_dir.glob("gta_sa_game_*.cpp"):
-            if old_file.name not in new_generated_files:
+        # Remove any stale generated files (including old gta_sa_game_*.cpp or other batches)
+        for old_file in out_dir.glob("*.cpp"):
+            if old_file.name not in new_generated_files and ("_game_" in old_file.name or old_file.name.startswith("gta_sa_")):
                 try:
                     old_file.unlink()
                 except OSError:

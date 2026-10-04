@@ -32,6 +32,3 @@ class StrictLiftTests(unittest.TestCase):
 
     def test_lego_does_not_emit_discovered_return_stubs(self):
         self.check_profile("lego_batman", {})
-
-    def test_legacy_control_still_exposes_old_behavior(self):
-        self.check_profile("legacy_pc", {0x401000: 16})

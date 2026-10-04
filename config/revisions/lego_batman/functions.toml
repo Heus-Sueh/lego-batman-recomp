@@ -6,6 +6,28 @@
 # -----------------------------------------------------------------------------
 
 [[function]]
+rva = 0x005C8110
+name = "clear_global_region_005C8110"
+convention = "cdecl"
+stack_purge = 0
+size = 21
+confidence = "PARTIALLY_VERIFIED"
+lift = true
+evidence = ["VERIFIED: six instructions call lifted memset 0x0073CB50 with destination 0x00AB29E8, value 0, size 0xA790; add esp,12 followed by ret at 0x005C8124", "VERIFIED: caller 0x004B0232 passes no stack arguments", "PARTIALLY_VERIFIED: zero-argument cdecl label; second independent caller not established", "Binary SHA-256: 981383d8c842a919dfecf61caf808a27745c3af39f4fa6197e3da88f5e6c842f"]
+callees = [0x0073CB50]
+
+[[function]]
+rva = 0x006D5510
+name = "store_indirect_global_pair_006D5510"
+convention = "cdecl"
+stack_purge = 0
+size = 24
+confidence = "PARTIALLY_VERIFIED"
+lift = true
+evidence = ["VERIFIED: seven-instruction leaf ends with plain ret at 0x006D5527; dereferences two stack arguments and stores their values at 0x00B028E0/0x00B028E4", "VERIFIED: caller 0x004B01E1 pushes two addresses; cleanup is deferred and combined at 0x004B0284", "PARTIALLY_VERIFIED: cdecl inferred from stack-only arguments and plain ret; second independent caller not established", "Binary SHA-256: 981383d8c842a919dfecf61caf808a27745c3af39f4fa6197e3da88f5e6c842f"]
+callees = []
+
+[[function]]
 rva = 0x0073D482
 name = "crt_pe_managed_image_check"
 convention = "cdecl"
@@ -3245,4 +3267,3 @@ confidence = "VERIFIED"
 lift = true
 evidence = ["VERIFIED: static initializer; loops zeroing array; returns at 0x0084CA3D (ret)"]
 callees = []
-

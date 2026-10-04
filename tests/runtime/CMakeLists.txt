@@ -8,6 +8,13 @@ add_test(NAME legacy_icall_failure COMMAND legacy_icall_tests)
 add_executable(runtime_file_tests file_foundation.cpp)
 target_link_libraries(runtime_file_tests PRIVATE pcrecomp::win32_fs)
 add_test(NAME runtime_file COMMAND runtime_file_tests)
+add_executable(runtime_heap_tests heap_foundation.cpp)
+target_link_libraries(runtime_heap_tests PRIVATE win32compat::kernel32)
+add_test(NAME runtime_heap COMMAND runtime_heap_tests)
+add_executable(guest_memory_tests guest_memory.cpp
+    ../../src/runtime/guest_memory.cpp ../../src/runtime/guest_heap.cpp)
+target_link_libraries(guest_memory_tests PRIVATE pcrecomp::bridge win32compat::kernel32)
+add_test(NAME guest_memory_arenas COMMAND guest_memory_tests)
 
 add_test(NAME runtime_dependency_rules
     COMMAND ${CMAKE_COMMAND} -DROOT=${PROJECT_SOURCE_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/dependency_rules.cmake)

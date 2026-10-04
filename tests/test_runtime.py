@@ -6,7 +6,6 @@ from pathlib import Path
 
 with open(Path(__file__).resolve().parent.parent / "config" / "target.toml", "rb") as f:
     ACTIVE_TARGET = tomllib.load(f)["target"]
-legacy_only = unittest.skipUnless(ACTIVE_TARGET["adapter"] == "legacy_pc", "Legacy RenderWare diagnostic, not a LEGO Batman capability")
 
 
 class TestRuntime(unittest.TestCase):
@@ -59,8 +58,7 @@ class TestRuntime(unittest.TestCase):
         with open(self.log_path, "r", encoding="utf-8") as f:
             content = f.read()
         self.assertIn("0xdeadbeef", content)
-        caller = "0x00748da0" if ACTIVE_TARGET["adapter"] == "legacy_pc" else "0x0073d6a3"
-        self.assertIn("caller=" + caller, content)
+        self.assertIn("caller=0x0073d6a3", content)
 
     def test_05_recompiled_startup_dispatch(self):
         cmd = [str(self.exe_path), "--headless", "--test-dispatch"]
@@ -80,46 +78,6 @@ class TestRuntime(unittest.TestCase):
         res = self.run_cmd(cmd)
         self.assertEqual(res.returncode, 0, f"Windowed presentation failed: {res.stderr}")
         self.assertIn("SDL3 initialized successfully", res.stdout)
-
-    @legacy_only
-    def test_08_custom_resolution_and_fps(self):
-        cmd = [str(self.exe_path), "--headless", "--frames", "5", "--fps", "60", "--width", "1280", "--height", "720"]
-        res = self.run_cmd(cmd)
-        self.assertEqual(res.returncode, 0, f"Custom FPS/res failed: {res.stderr}")
-        self.assertIn("tick duration: 16666 us", res.stdout)
-
-    @legacy_only
-    def test_09_raster_resource_lifecycle(self):
-        cmd = [str(self.exe_path), "--headless", "--test-raster"]
-        res = self.run_cmd(cmd)
-        self.assertEqual(res.returncode, 0, f"Raster test failed: {res.stderr}")
-        self.assertIn("Verifying RenderWare raster lifecycle (64x64 ARGB)", res.stdout)
-        self.assertIn("Raster and texture created and unlocked successfully", res.stdout)
-        self.assertIn("Raster and texture destroyed successfully", res.stdout)
-
-    @legacy_only
-    def test_10_splash_screen_presentation(self):
-        cmd = [str(self.exe_path), "--test-splash", "--frames", "5"]
-        res = self.run_cmd(cmd)
-        self.assertEqual(res.returncode, 0, f"Splash presentation failed: {res.stderr}")
-        self.assertIn("Displaying loading screen splash", res.stdout)
-        self.assertIn("Swapchain presentations: 5", res.stdout)
-
-    @legacy_only
-    def test_11_menu_initialization_and_state_machine(self):
-        cmd = [str(self.exe_path), "--headless", "--test-menu"]
-        res = self.run_cmd(cmd)
-        self.assertEqual(res.returncode, 0, f"Menu test failed: {res.stderr}")
-        self.assertIn("Validating authentic CMenuManager state machine (0x00574F30)", res.stdout)
-        self.assertIn("Authentic CMenuManager state machine validated successfully", res.stdout)
-
-    @legacy_only
-    def test_12_im3d_pipeline(self):
-        cmd = [str(self.exe_path), "--headless", "--test-im3d"]
-        res = self.run_cmd(cmd)
-        self.assertEqual(res.returncode, 0, f"RwIm3D test failed: {res.stderr}")
-        self.assertIn("Validating RenderWare 3D pipeline (RwIm3D)", res.stdout)
-        self.assertIn("RenderWare 3D pipeline (RwIm3D) and perspective projection validated successfully", res.stdout)
 
     def test_13_authentic_game_asset_discovery(self):
         cmd = [str(self.exe_path), "--headless", "--frames", "5"]
@@ -167,14 +125,6 @@ class TestRuntime(unittest.TestCase):
         self.assertIn("Loaded Direct3D 9 runtime from: thirdparty/dxvk-native/lib/libdxvk_d3d9.so", res.stdout)
         self.assertIn("Direct3D 9 guest-to-host COM thunking layer initialized", res.stdout)
         self.assertIn("Recomp runtime completed cleanly.", res.stdout)
-
-    @legacy_only
-    def test_20_frontend_textures_and_sprites(self):
-        cmd = [str(self.exe_path), "--headless", "--test-menu"]
-        res = self.run_cmd(cmd)
-        self.assertEqual(res.returncode, 0, f"Frontend menu & texture test failed: {res.stderr}")
-        self.assertIn("Validating authentic CMenuManager state machine (0x00574F30)", res.stdout)
-        self.assertIn("Authentic CMenuManager state machine validated successfully", res.stdout)
 
 
 if __name__ == "__main__":

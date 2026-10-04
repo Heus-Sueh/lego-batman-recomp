@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GTA: San Andreas Static Recompilation - Startup Frontier & ABI Validator
+Target Static Recompilation - Startup Frontier & ABI Validator
 Milestone M2 Analysis Tool
 
 Validates:
@@ -54,13 +54,17 @@ def check_bounds(fn: dict, code_regions: list[dict]) -> bool:
 
 def main():
     repo_root = Path(__file__).resolve().parent.parent.parent
-    revision_dir = repo_root / "config" / "revisions" / "gta_sa_compact"
+    target_toml = repo_root / "config" / "target.toml"
+    target_data = load_toml(target_toml)
+    target = target_data.get("target", {})
+    active_rev = target.get("active_revision", "config/revisions/lego_batman")
+    revision_dir = repo_root / active_rev
 
     functions_path = revision_dir / "functions.toml"
     globals_path = revision_dir / "globals.toml"
 
     print("=" * 70)
-    print("  GTA: San Andreas Recomp - Startup Call Graph & ABI Analysis")
+    print(f"  {target.get('title', 'Target Recomp')} - Startup Call Graph & ABI Analysis")
     print("=" * 70)
 
     funcs_data = load_toml(functions_path)

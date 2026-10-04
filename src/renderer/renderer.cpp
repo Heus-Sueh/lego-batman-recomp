@@ -1,6 +1,5 @@
 #include "renderer.h"
 #include "../platform/platform.h"
-#include "../rw/rw_core.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 #include <vector>
@@ -8,6 +7,41 @@
 #include <cmath>
 #include <thread>
 
+namespace {
+// 2D Immediate-Mode Primitives
+struct Im2DVertex {
+    float    x{0.0f};
+    float    y{0.0f};
+    float    z{0.0f};
+    float    rhw{1.0f};
+    uint32_t emissiveColor{0xFFFFFFFF}; // ARGB
+    float    u{0.0f};
+    float    v{0.0f};
+};
+
+struct Im3DVertex {
+    struct {
+        float x{0.0f};
+        float y{0.0f};
+        float z{0.0f};
+    } objVertex;
+    struct {
+        float x{0.0f};
+        float y{1.0f};
+        float z{0.0f};
+    } objNormal;
+    uint32_t color{0xFFFFFFFF}; // ARGB
+    float    u{0.0f};
+    float    v{0.0f};
+};
+
+constexpr uint32_t PRIMTYPE_LINELIST  = 1;
+constexpr uint32_t PRIMTYPE_POLYLINE  = 2;
+constexpr uint32_t PRIMTYPE_TRILIST   = 3;
+constexpr uint32_t PRIMTYPE_TRISTRIP  = 4;
+constexpr uint32_t PRIMTYPE_TRIFAN    = 5;
+constexpr uint32_t PRIMTYPE_POINTLIST = 6;
+} // namespace
 
 namespace pcrecomp::renderer {
 
@@ -216,7 +250,7 @@ bool Renderer::render_im2d(uint32_t prim_type, const void* vertices, int num_ver
     if (!vertices || num_vertices <= 0) return false;
 
     SDL_Renderer* ren = static_cast<SDL_Renderer*>(platform::Platform::instance().native_renderer_handle());
-    const auto* rw_verts = static_cast<const rw::RwIm2DVertex*>(vertices);
+    const auto* rw_verts = static_cast<const Im2DVertex*>(vertices);
 
     std::vector<SDL_Vertex> sdl_verts(num_vertices);
     for (int i = 0; i < num_vertices; ++i) {
@@ -234,13 +268,13 @@ bool Renderer::render_im2d(uint32_t prim_type, const void* vertices, int num_ver
     }
 
     std::vector<int> sdl_indices;
-    if (prim_type == rw::rwPRIMTYPETRIFAN) {
+    if (prim_type == PRIMTYPE_TRIFAN) {
         for (int i = 1; i < num_vertices - 1; ++i) {
             sdl_indices.push_back(0);
             sdl_indices.push_back(i);
             sdl_indices.push_back(i + 1);
         }
-    } else if (prim_type == rw::rwPRIMTYPETRISTRIP) {
+    } else if (prim_type == PRIMTYPE_TRISTRIP) {
         for (int i = 0; i < num_vertices - 2; ++i) {
             if (i % 2 == 0) {
                 sdl_indices.push_back(i);
@@ -252,7 +286,7 @@ bool Renderer::render_im2d(uint32_t prim_type, const void* vertices, int num_ver
                 sdl_indices.push_back(i + 2);
             }
         }
-    } else if (prim_type == rw::rwPRIMTYPETRILIST && indices && num_indices > 0) {
+    } else if (prim_type == PRIMTYPE_TRILIST && indices && num_indices > 0) {
         sdl_indices.reserve(num_indices);
         for (int i = 0; i < num_indices; ++i) {
             sdl_indices.push_back(static_cast<int>(indices[i]));
@@ -315,7 +349,7 @@ void Renderer::set_view_matrix(float eye_x, float eye_y, float eye_z, float targ
     m_cam_forward[1] = fy;
     m_cam_forward[2] = fz;
 
-    // In GTA San Andreas Z is UP: up_world = (0, 0, 1)
+    // World coordinate system Z is UP: up_world = (0, 0, 1)
     // Right = Forward x Up_world
     float rx = fy;
     float ry = -fx;
@@ -353,7 +387,7 @@ bool Renderer::render_im3d(uint32_t prim_type, const void* vertices, int num_ver
     if (!vertices || num_vertices <= 0) return false;
 
     SDL_Renderer* ren = static_cast<SDL_Renderer*>(platform::Platform::instance().native_renderer_handle());
-    const auto* rw_verts = static_cast<const rw::RwIm3DVertex*>(vertices);
+    const auto* rw_verts = static_cast<const Im3DVertex*>(vertices);
 
     int win_w = platform::Platform::instance().window_width();
     int win_h = platform::Platform::instance().window_height();
@@ -366,7 +400,7 @@ bool Renderer::render_im3d(uint32_t prim_type, const void* vertices, int num_ver
     float tan_fov = std::tan(fov_half_rad);
     float aspect = fw / fh;
 
-    // Sunlight vector (San Andreas warm sun direction)
+    // Direct lighting vector
     constexpr float sun_x = 0.408248f;
     constexpr float sun_y = 0.408248f;
     constexpr float sun_z = 0.816497f;
@@ -377,7 +411,7 @@ bool Renderer::render_im3d(uint32_t prim_type, const void* vertices, int num_ver
         SDL_FColor color;
     };
 
-    auto transform_vertex = [&](const rw::RwIm3DVertex& v) -> CamVertex {
+    auto transform_vertex = [&](const Im3DVertex& v) -> CamVertex {
         float dx = v.objVertex.x - m_cam_eye[0];
         float dy = v.objVertex.y - m_cam_eye[1];
         float dz = v.objVertex.z - m_cam_eye[2];
@@ -481,7 +515,7 @@ bool Renderer::render_im3d(uint32_t prim_type, const void* vertices, int num_ver
         }
     };
 
-    if (prim_type == rw::rwPRIMTYPETRILIST) {
+    if (prim_type == PRIMTYPE_TRILIST) {
         if (indices && num_indices > 0) {
             for (int i = 0; i + 2 < num_indices; i += 3) {
                 auto cv0 = transform_vertex(rw_verts[indices[i]]);
@@ -497,7 +531,7 @@ bool Renderer::render_im3d(uint32_t prim_type, const void* vertices, int num_ver
                 add_triangle(cv0, cv1, cv2);
             }
         }
-    } else if (prim_type == rw::rwPRIMTYPETRISTRIP) {
+    } else if (prim_type == PRIMTYPE_TRISTRIP) {
         for (int i = 0; i + 2 < num_vertices; ++i) {
             auto cv0 = transform_vertex(rw_verts[i]);
             auto cv1 = transform_vertex(rw_verts[i + 1]);
@@ -508,7 +542,7 @@ bool Renderer::render_im3d(uint32_t prim_type, const void* vertices, int num_ver
                 add_triangle(cv1, cv0, cv2);
             }
         }
-    } else if (prim_type == rw::rwPRIMTYPETRIFAN) {
+    } else if (prim_type == PRIMTYPE_TRIFAN) {
         auto cv0 = transform_vertex(rw_verts[0]);
         for (int i = 1; i + 1 < num_vertices; ++i) {
             auto cv1 = transform_vertex(rw_verts[i]);
@@ -569,49 +603,41 @@ void Renderer::render_splash_screen() {
     if (w <= 0) w = 800;
     if (h <= 0) h = 600;
 
-    // Prioritize authentic splash texture from models/txd/loadsc0.txd
     static void* s_splash_tex = nullptr;
     if (!s_splash_tex) {
-        rw::RwRaster* splash_raster = rw::CLoadingScreen_GetSplashRaster();
-        if (splash_raster) {
-            s_splash_tex = get_raster_native_texture(splash_raster);
+        constexpr int tex_w = 256;
+        constexpr int tex_h = 256;
+        std::vector<uint32_t> pixels(tex_w * tex_h);
+
+        // Neutral dark background gradient
+        for (int y = 0; y < tex_h; ++y) {
+            float t = static_cast<float>(y) / static_cast<float>(tex_h);
+            uint8_t r = static_cast<uint8_t>((1.0f - t) * 20 + t * 40);
+            uint8_t g = static_cast<uint8_t>((1.0f - t) * 20 + t * 40);
+            uint8_t b = static_cast<uint8_t>((1.0f - t) * 35 + t * 70);
+            uint32_t color = (0xFFu << 24) | (r << 16) | (g << 8) | b;
+            for (int x = 0; x < tex_w; ++x) {
+                pixels[y * tex_w + x] = color;
+            }
         }
 
-        if (!s_splash_tex) {
-            constexpr int tex_w = 256;
-            constexpr int tex_h = 256;
-            std::vector<uint32_t> pixels(tex_w * tex_h);
-
-            // Fallback stylish San Andreas sunset gradient (Deep Orange / Purple / Yellow)
-            for (int y = 0; y < tex_h; ++y) {
-                float t = static_cast<float>(y) / static_cast<float>(tex_h);
-                uint8_t r = static_cast<uint8_t>((1.0f - t) * 220 + t * 40);
-                uint8_t g = static_cast<uint8_t>((1.0f - t) * 110 + t * 15);
-                uint8_t b = static_cast<uint8_t>((1.0f - t) * 30 + t * 90);
-                uint32_t color = (0xFFu << 24) | (r << 16) | (g << 8) | b;
-                for (int x = 0; x < tex_w; ++x) {
-                    pixels[y * tex_w + x] = color;
-                }
-            }
-
-            s_splash_tex = create_native_texture(tex_w, tex_h);
-            if (s_splash_tex) {
-                update_native_texture(s_splash_tex, tex_w, tex_h, pixels.data(), tex_w * 4);
-            }
+        s_splash_tex = create_native_texture(tex_w, tex_h);
+        if (s_splash_tex) {
+            update_native_texture(s_splash_tex, tex_w, tex_h, pixels.data(), tex_w * 4);
         }
     }
 
     bind_texture(s_splash_tex);
 
     // Fullscreen 2D quad (TRIANGLEFAN: top-left, top-right, bottom-right, bottom-left)
-    rw::RwIm2DVertex quad[4] = {
+    Im2DVertex quad[4] = {
         { 0.0f,               0.0f,               0.0f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
         { static_cast<float>(w), 0.0f,            0.0f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
         { static_cast<float>(w), static_cast<float>(h), 0.0f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
         { 0.0f,               static_cast<float>(h), 0.0f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f }
     };
 
-    render_im2d(rw::rwPRIMTYPETRIFAN, quad, 4, nullptr, 0);
+    render_im2d(PRIMTYPE_TRIFAN, quad, 4, nullptr, 0);
     bind_texture(nullptr);
 
     if (!m_splash_rendered) {
