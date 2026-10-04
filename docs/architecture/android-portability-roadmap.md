@@ -4,7 +4,8 @@
 
 ## Goal
 
-Port the static recompilation runtime and the GTA: San Andreas recomp project to **Android ARM64** (`arm64-v8a`).
+Explore an **Android ARM64** (`arm64-v8a`) host for the reusable runtime and a
+configured game. This is deferred design work, not a supported target.
 
 Target Architecture:
 ```text
@@ -19,7 +20,8 @@ Target Architecture:
            x86_64         x86_64        ARM64
 ```
 
-The lifted x86 code remains platform-independent. Platform differences are encapsulated strictly in the runtime and platform abstraction layers.
+Platform differences should be isolated in runtime/platform layers. Generated
+code still requires portability validation on the actual compiler and CPU.
 
 ## Target Baseline
 - ABI: `arm64-v8a`
@@ -34,12 +36,13 @@ The lifted x86 code remains platform-independent. Platform differences are encap
 - Explicitly exclude 32-bit ARM (ARMv7). Target 64-bit ARM exclusively.
 
 ### Phase 1: Portable Image Loader
-- Eliminate Windows-specific virtual memory APIs (`VirtualAlloc`, `MapViewOfFile`).
-- Replace with generic POSIX `mmap` / `mprotect` memory mapping for guest image loading.
+- Keep host memory APIs behind pcmodern, preserving existing Windows support.
+- Add or validate an Android backend and verify guest address-layout constraints.
 
 ### Phase 2: CPU Semantics & Memory Model on ARM64
 - Validate little-endian memory access and unaligned 32-bit load/store behavior on AArch64.
-- Implement x87 80-bit extended precision float fallbacks (using double or soft-float if required).
+- Establish required x87 precision and exception behavior; double precision is
+  not automatically equivalent to 80-bit arithmetic.
 
 ### Phase 3: Android Platform Abstraction
 - Windowing and event pump via Android NDK NativeActivity or SDL3 Android backend.

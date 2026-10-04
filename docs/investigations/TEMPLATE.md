@@ -18,7 +18,7 @@
 - [x] UNKNOWN until evidence assigns ownership
 - [ ] Recompiler (lifter instruction, CFG, jump table, calling convention, flags, x87)
 - [ ] Runtime (guest memory, PE loading, Win32, dispatch, callback, threading, timing)
-- [ ] Game-specific (middleware behavior, RenderWare driver, title-specific logic)
+- [ ] Game-specific (middleware behavior or title-specific logic)
 
 ## Evidence
 - [Trace logs, register dumps, disassembly snippet, stack trace]

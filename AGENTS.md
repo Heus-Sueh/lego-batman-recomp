@@ -2,7 +2,7 @@
 
 ## 1. Project Identity & Objective
 
-This repository develops a native static recompilation of a configured x86-32 PC game using pcrecomp. The current target is LEGO Batman: The Videogame. Read `config/target.toml` for identity and revision selection; historical GTA documentation is not current target evidence.
+This repository develops a native static recompilation of a configured x86-32 PC game using pcrecomp. The current target is LEGO Batman: The Videogame. Read `config/target.toml` for identity and revision selection; another title's historical documentation is not current target evidence.
 
 ```text
 configured original executable
@@ -53,7 +53,7 @@ Replace only external host boundaries when necessary, including:
 * Win32;
 * DirectInput;
 * DirectSound;
-* DirectX / RenderWare presentation boundaries;
+* external graphics APIs and host presentation boundaries;
 * host filesystem integration;
 * threading;
 * platform-specific services.
@@ -68,7 +68,7 @@ See:
 
 Encrypted or protected executables cannot automatically be treated as ordinary linearly disassemblable images on disk.
 
-Disassembly and lifting require a compatible clean executable or decrypted memory image matching the selected revision. Verify binary identity before applying addresses or patches. Historical GTA DRM notes were removed from the active tree; consult Git history only as title-specific background.
+Disassembly and lifting require a compatible clean executable or decrypted memory image matching the selected revision. Verify binary identity before applying addresses or patches. A thunk or unusual section name alone does not establish DRM or justify a patch.
 
 ### 2.4 Generated Code Ownership
 

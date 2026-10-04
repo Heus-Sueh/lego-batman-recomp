@@ -37,13 +37,13 @@ Fixes and improvements should be contributed upstream when they resolve:
 
 ### Belongs in Project (`src/`, `config/`, `docs/`)
 Keep game-specific logic and data in this repository:
-- Revision metadata (`config/revisions/gta_sa_<sha>/`).
+- Revision metadata in the directory selected by `config/target.toml`.
 - Function maps and symbol names (`functions.toml`).
 - Game-specific deterministic patches (`patches.toml`).
 - Win32 / DirectInput / DirectSound compatibility shims (`src/win32/`).
-- RenderWare engine integration and presentation pacing (`src/renderer/`, `src/platform/`).
+- Target graphics integration and host presentation (`src/renderer/`, `src/platform/`).
 
 ## Upstream Isolation Invariant
 
 - Upstream modifications should remain isolated on dedicated branches or local commits within `thirdparty/pcrecomp` so they can be submitted cleanly as pull requests.
-- Never place title-specific hacks or GTA SA addresses directly inside `thirdparty/pcrecomp/`.
+- Never place title-specific hacks or revision-specific addresses directly inside `thirdparty/pcrecomp/`.

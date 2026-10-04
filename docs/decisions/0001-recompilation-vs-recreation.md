@@ -1,23 +1,32 @@
 # ADR 0001: Static Recompilation vs Source Recreation
 
 ## Context
-When bringing up a legacy title like *Grand Theft Auto: San Andreas* on modern platforms, two fundamentally different architectural paths exist:
-1. **Source Recreation / Behavioral Clone**: Re-implementing the game from scratch or reverse-engineering pseudocode by hand (e.g. creating synthetic C++ classes like `CGame`, `CWorld`, `CMenuManager` in `src/game/`).
-2. **Static Recompilation**: Lifting the original compiled x86-32 instructions directly from `gta_sa.exe` into C/C++, compiling them natively, and wrapping them with a minimal host compatibility layer.
+
+Recreating application behavior and lifting its original instructions are
+different approaches. This repository chooses static recompilation of the
+executable selected by `config/target.toml`.
 
 ## Decision
-We strictly choose **Static Recompilation**.
 
-The original executable remains the authoritative reference for:
-- Game initialization and main loop.
-- Gameplay logic, missions, scripts, and state machines.
-- AI, pedestrian logic, vehicle physics, and camera control.
-- World simulation, streaming, save/load formats, and animations.
-- RenderWare-side game logic.
+Original initialization, gameplay, scripts, simulation, streaming, saves,
+animation and application-side rendering logic must execute through lifted
+x86-32 instructions. The matching original executable is authoritative.
 
-Under NO circumstances shall any developer or AI agent rewrite, re-implement, or fake original game logic in hand-written C++ under `src/game/` or elsewhere. Any temporary stubs must be systematically replaced by recompiled x86-32 functions lifted from the game binary.
+Do not replace original behavior with handwritten C++, synthetic state changes
+or success-returning placeholders. Missing guest functions remain visible
+blockers until their authentic behavior is lifted.
+
+External boundaries may be replaced when necessary: operating-system services,
+files, graphics APIs, input, audio and synchronization. Preserve their guest
+contracts and keep implementations in the proper runtime/platform layer.
 
 ## Consequences
-- **Positive**: Preserving original instructions makes original behavior the implementation reference. Behavioral equivalence still requires validation of lifting, ABI, runtime and timing; it is not guaranteed by this decision.
-- **Negative**: Requires strict handling of 32-bit guest memory model, x86-32 ABI calling conventions, stack purge counts, and indirect calls (ICALLs).
-- **Rejected Alternative**: Hand-written reimplementation was rejected because it inevitably leads to subtle divergences in physics, script execution, AI, and mission logic that are impossible to fully debug.
+
+Fix generated-code defects in metadata or the lifter and regenerate.
+Verify binary identity, ABI, memory effects and timing for the selected revision.
+Preserving instructions does not guarantee equivalence: independent validation
+of runtime services and translated instruction semantics is still required.
+Source recreation is outside this project's scope.
+
+See [contribution workflow](../../CONTRIBUTING.md) and
+[validation policy](../../.agents/skills/recomp-validation/SKILL.md).

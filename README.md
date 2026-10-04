@@ -56,9 +56,8 @@ points, functions and globals belong in the selected directory under
 Original application logic must execute through lifted instructions. Host
 replacements belong at external boundaries such as Win32, graphics, input,
 audio and filesystem access. Never hand-edit `generated/recomp/`.
-Historical GTA documentation and the legacy comparison profile are not evidence
-of correct LEGO Batman behavior. See the [runtime audit](docs/runtime-architecture-audit.md)
-for migration context, and inspect current source before relying on its findings.
+Historical results from other targets are not evidence of correct behavior for
+the selected binary. See [runtime migration risks](docs/runtime-architecture-audit.md).
 
 The default expects user-supplied `game/LEGOBatman.exe` and game data.
 Verify binary identity against the selected revision before using its addresses.
@@ -129,7 +128,7 @@ its nonzero exit currently reports the known blocker, not a successful boot.
 Reusable libraries live in `libpcrecomp/`, `win32compat/` and `pcmodern/`.
 The manifest now selects the `lego_batman` integration adapter. Its bootstrap
 uses revision-derived PE entry metadata, checks PE headers and file size, and
-does not initialize GTA/RenderWare assets or inject GTA input/window globals.
+does not recreate application initialization or inject another title's globals.
 Legacy raster/menu/splash probes and `--fps` are unsupported in this adapter.
 The historical `legacy_pc` adapter has been removed and is no longer selectable.
 See [target adapters](docs/architecture/target-adapters.md)

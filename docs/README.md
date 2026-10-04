@@ -10,8 +10,8 @@ live in [recomp-validation](../.agents/skills/recomp-validation/SKILL.md).
 | Need | Canonical source |
 |---|---|
 | Runtime ownership, migrated services, limitations and tests | [Runtime architecture](runtime-architecture.md) |
-| Why the runtime migration was needed | [Pre-migration audit](runtime-architecture-audit.md) |
-| Current file-API migration target | [Next runtime target](implementation/file-api-migration.md) |
+| Remaining runtime migration risks | [Ownership checklist](runtime-architecture-audit.md) |
+| Implemented file-API migration slice | [File lifecycle](implementation/file-api-migration.md) |
 | Project-specific implementation workflow | [Recurring recipes](implementation/recurring-recipes.md) |
 | Purge discovery implementation and limitations | [Stack purge discovery](implementation/stack-purge-discovery.md) |
 | Required project behavior | [AGENTS](../AGENTS.md), [ADR 0001](decisions/0001-recompilation-vs-recreation.md), [ADR 0002](decisions/0002-decoupled-presentation-pacing.md) |
@@ -21,7 +21,8 @@ live in [recomp-validation](../.agents/skills/recomp-validation/SKILL.md).
 `architecture/` describes subsystem context and explicitly labeled proposals.
 `gotchas/` records pitfalls; verify revision-specific addresses before applying
 them. `references/` describes external tooling, not current game progress.
-`investigations/` preserves historical experiments, including rejected approaches.
+`investigations/` preserves target-specific experiments with dated evidence.
+Removed reports for the previous target remain recoverable from Git history.
 Old M/G milestone numbers must not be mapped directly onto today's gates.
 
 Do not infer functioning gameplay, audio, streaming or visual equivalence from
